@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkBuddy — People-first HR, powered by AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:ital,wght@0,600;0,700;0,800;1,700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── TOKENS ── */
+    :root {
+      --blue:        #0f8adb;
+      --blue-light:  #2db5ec;
+      --blue-dark:   #135b99;
+      --blue-glow:   rgba(15,138,219,0.25);
+      --font-display:'Plus Jakarta Sans', sans-serif;
+      --font-body:   'Inter', sans-serif;
+      --radius:      12px;
+    }
+
+    /* DARK MODE (default) */
+    [data-theme="dark"] {
+      --bg:          #080f17;
+      --bg-2:        #0e1a28;
+      --bg-3:        #0a1220;
+      --surface:     rgba(255,255,255,0.04);
+      --border:      rgba(255,255,255,0.08);
+      --text:        #ffffff;
+      --text-muted:  rgba(255,255,255,0.5);
+      --text-faint:  rgba(255,255,255,0.25);
+      --card-bg:     rgba(255,255,255,0.03);
+      --card-border: rgba(255,255,255,0.07);
+      --nav-bg:      rgba(8,15,23,0.85);
+      --footer-bg:   #050a10;
+      --proof-bg:    rgba(255,255,255,0.02);
+      --hero-img:    url('images/hero-dark.png');
+    }
+
+    /* LIGHT MODE */
+    [data-theme="light"] {
+      --bg:          #f0f6fc;
+      --bg-2:        #e8f0f9;
+      --bg-3:        #ddeaf5;
+      --surface:     rgba(15,138,219,0.05);
+      --border:      rgba(15,138,219,0.15);
+      --text:        #0d1b2a;
+      --text-muted:  #4a6080;
+      --text-faint:  #8da5be;
+      --card-bg:     #ffffff;
+      --card-border: #d1dce8;
+      --nav-bg:      rgba(240,246,252,0.9);
+      --footer-bg:   #ddeaf5;
+      --proof-bg:    #e8f0f9;
+      --hero-img:    url('images/hero-light.png');
+    }
+
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      transition: background 0.3s, color 0.3s;
+    }
+    a { text-decoration: none; color: inherit; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 5vw;
+      background: var(--nav-bg);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      transition: all 0.3s;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 0.65rem;
+    }
+    .nav-brand img { width: 32px; height: 32px; object-fit: contain; }
+    .nav-brand span {
+      font-family: var(--font-display);
+      font-weight: 800; font-size: 1.1rem;
+      color: var(--blue);
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 2rem; list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.875rem; color: var(--text-muted); transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+
+    /* Theme toggle */
+    .theme-toggle {
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px; cursor: pointer; border: none;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .theme-toggle:hover { color: var(--text); background: var(--surface); }
+
+    .btn-nav {
+      padding: 0.5rem 1.1rem; border-radius: 6px;
+      font-size: 0.875rem; font-weight: 600;
+      transition: all 0.2s; cursor: pointer; border: none;
+      font-family: var(--font-body);
+    }
+    .btn-nav-ghost {
+      background: transparent; color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-nav-ghost:hover { color: var(--text); background: var(--surface); }
+    .btn-nav-primary {
+      background: var(--blue); color: #fff;
+      box-shadow: 0 0 20px var(--blue-glow);
+    }
+    .btn-nav-primary:hover {
+      background: var(--blue-dark);
+      transform: translateY(-1px);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 120px 5vw 80px;
+      text-align: center;
+      position: relative; overflow: hidden;
+    }
+
+    [data-theme="dark"] .hero::after {
+      content: '';
+      position: absolute;
+      width: 900px; height: 900px;
+      background: radial-gradient(circle, rgba(15,138,219,0.12) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -60%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(15,138,219,0.12);
+      border: 1px solid rgba(15,138,219,0.3);
+      border-radius: 20px;
+      padding: 0.35rem 1rem;
+      font-size: 0.78rem; font-weight: 600;
+      color: var(--blue-light);
+      letter-spacing: 0.04em; text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    [data-theme="light"] .hero-eyebrow { color: var(--blue-dark); }
+
+    .eyebrow-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--blue-light);
+      animation: pulseDot 2s ease-in-out infinite;
+    }
+    [data-theme="light"] .eyebrow-dot { background: var(--blue); }
+
+    @keyframes pulseDot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    .hero-headline {
+      font-family: var(--font-display);
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
+      font-weight: 800; line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.25rem;
+      animation: fadeUp 0.6s 0.1s ease both;
+      color: var(--text);
+    }
+    .hero-headline em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--blue-light), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    [data-theme="light"] .hero-headline em {
+      background: linear-gradient(90deg, var(--blue), var(--blue-dark));
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--text-muted);
+      max-width: 560px; margin: 0 auto 2.5rem;
+      line-height: 1.7;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex; align-items: center; gap: 1rem;
+      justify-content: center; flex-wrap: wrap;
+      margin-bottom: 4rem;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+    .btn-hero-primary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.85rem 2rem;
+      background: var(--blue); color: #fff;
+      font-weight: 700; font-size: 1rem; font-family: var(--font-body);
+      border-radius: 8px; border: none; cursor: pointer;
+      box-shadow: 0 0 32px var(--blue-glow), 0 4px 16px rgba(0,0,0,0.2);
+      transition: all 0.2s;
+    }
+    .btn-hero-primary:hover {
+      background: var(--blue-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 0 48px var(--blue-glow), 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .btn-hero-ghost {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.85rem 1.75rem;
+      background: transparent; color: var(--text-muted);
+      font-weight: 600; font-size: 1rem; font-family: var(--font-body);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .btn-hero-ghost:hover { color: var(--text); border-color: var(--blue); }
+
+    /* ── HERO IMAGE (swappable) ──
+       To swap images: replace the files in the images/ folder
+       hero-dark.png  → shown in dark mode
+       hero-light.png → shown in light mode
+       Recommended size: 1200px wide, any height
+    ── */
+    .hero-image-wrap {
+      width: 100%; max-width: 960px;
+      margin: 0 auto;
+      animation: fadeUp 0.8s 0.4s ease both;
+      position: relative;
+    }
+    .hero-image-wrap::before {
+      content: '';
+      position: absolute; inset: -30px;
+      background: radial-gradient(ellipse, var(--blue-glow) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    .hero-img {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 40px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04);
+      position: relative; z-index: 1;
+      transition: opacity 0.3s;
+      display: block;
+    }
+    [data-theme="light"] .hero-img {
+      box-shadow: 0 24px 60px rgba(15,138,219,0.15), 0 0 0 1px var(--border);
+    }
+    /* The two images — JS toggles which is visible */
+    #hero-img-dark  { display: block; }
+    #hero-img-light { display: none; }
+    [data-theme="light"] #hero-img-dark  { display: none; }
+    [data-theme="light"] #hero-img-light { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── PROOF STRIP ── */
+    .proof-strip {
+      background: var(--proof-bg);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 1.75rem 5vw;
+      display: flex; align-items: center; justify-content: center;
+      gap: 3rem; flex-wrap: wrap;
+    }
+    .proof-item { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+    .proof-num {
+      font-family: var(--font-display);
+      font-size: 1.75rem; font-weight: 800;
+      background: linear-gradient(90deg, var(--blue-light), var(--blue));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    [data-theme="light"] .proof-num {
+      background: linear-gradient(90deg, var(--blue), var(--blue-dark));
+      -webkit-background-clip: text; background-clip: text;
+    }
+    .proof-lbl { font-size: 0.78rem; color: var(--text-muted); }
+    .proof-divider { width: 1px; height: 36px; background: var(--border); }
+
+    /* ── SHARED SECTION STYLES ── */
+    .section { padding: 6rem 5vw; background: var(--bg); }
+    .section-alt { background: var(--bg-2); }
+    .section-dark-alt { background: var(--bg-3); }
+
+    .section-label {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--blue); margin-bottom: 1rem;
+    }
+    .section-label::before {
+      content: ''; width: 20px; height: 2px;
+      background: var(--blue); border-radius: 2px;
+    }
+    .section-headline {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800; line-height: 1.15;
+      letter-spacing: -0.02em;
+      max-width: 600px; margin-bottom: 1rem;
+      color: var(--text);
+    }
+    .section-sub {
+      font-size: 1rem; color: var(--text-muted);
+      max-width: 520px; line-height: 1.7; margin-bottom: 3rem;
+    }
+
+    /* ── FEATURES GRID ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius); padding: 1.5rem;
+      transition: all 0.3s; position: relative; overflow: hidden;
+    }
+    .feature-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--blue), transparent);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .feature-card:hover { border-color: rgba(15,138,219,0.3); transform: translateY(-4px); box-shadow: 0 12px 32px rgba(15,138,219,0.1); }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-icon { font-size: 1.5rem; margin-bottom: 0.75rem; }
+    .feature-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text); }
+    .feature-desc { font-size: 0.875rem; color: var(--text-muted); line-height: 1.65; }
+    .feature-tag { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.65rem; font-size: 0.7rem; font-weight: 600; color: var(--blue); }
+
+    /* ── AI SECTION ── */
+    .ai-section { padding: 6rem 5vw; background: var(--bg-3); }
+    .ai-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4rem; align-items: center; max-width: 1100px; margin: 0 auto;
+    }
+    .ai-features-list { display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem; }
+    .ai-feature-item {
+      display: flex; gap: 1rem; align-items: flex-start;
+      padding: 1rem; background: var(--card-bg);
+      border: 1px solid var(--card-border); border-radius: 10px; transition: all 0.25s;
+    }
+    .ai-feature-item:hover { background: rgba(15,138,219,0.06); border-color: rgba(15,138,219,0.2); }
+    .ai-feature-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue-dark), var(--blue));
+      color: #fff; font-size: 0.7rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .ai-feature-title { font-weight: 600; font-size: 0.925rem; margin-bottom: 0.2rem; color: var(--text); }
+    .ai-feature-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* Chat mockup */
+    .chat-mockup {
+      background: var(--bg-2); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+    }
+    .chat-mockup-header {
+      padding: 0.85rem 1.1rem; background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 0.6rem;
+    }
+    .chat-mockup-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--blue-light));
+      display: flex; align-items: center; justify-content: center; font-size: 0.65rem;
+    }
+    .chat-mockup-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .chat-mockup-status { font-size: 0.65rem; color: var(--text-faint); }
+    .chat-online { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; margin-left: auto; animation: pulseDot 2s infinite; }
+    .chat-messages-mock { padding: 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    .chat-msg-mock { display: flex; gap: 0.5rem; align-items: flex-end; }
+    .chat-msg-mock.user { flex-direction: row-reverse; }
+    .chat-bubble-mock { max-width: 80%; padding: 0.6rem 0.85rem; border-radius: 10px; font-size: 0.78rem; line-height: 1.5; }
+    .chat-bubble-ai { background: var(--surface); color: var(--text-muted); border-bottom-left-radius: 3px; }
+    .chat-bubble-user { background: var(--blue); color: #fff; border-bottom-right-radius: 3px; }
+    .chat-mini-avatar { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; }
+    .chat-mini-avatar.ai   { background: linear-gradient(135deg, var(--blue), var(--blue-light)); }
+    .chat-mini-avatar.user { background: linear-gradient(135deg, var(--blue-dark), var(--blue)); }
+    .typing-mock {
+      display: flex; gap: 3px; padding: 0.6rem 0.85rem;
+      background: var(--surface); border-radius: 10px; border-bottom-left-radius: 3px; width: fit-content;
+    }
+    .typing-mock span {
+      width: 5px; height: 5px; border-radius: 50%; background: var(--text-muted);
+      animation: typDot 1.2s ease-in-out infinite;
+    }
+    .typing-mock span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-mock span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typDot { 0%,60%,100% { transform: translateY(0); opacity:0.4; } 30% { transform: translateY(-4px); opacity:1; } }
+    .chat-input-mock {
+      padding: 0.75rem 1rem; border-top: 1px solid var(--border);
+      display: flex; gap: 0.5rem; align-items: center;
+    }
+    .chat-input-mock-field {
+      flex: 1; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.45rem 0.75rem;
+      font-size: 0.72rem; color: var(--text-faint);
+    }
+    .chat-send-mock {
+      width: 28px; height: 28px; background: var(--blue); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .chat-send-mock svg { width: 12px; height: 12px; color: #fff; }
+
+    /* ── ROLES ── */
+    .roles-section { padding: 6rem 5vw; background: var(--bg-2); }
+    .roles-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1.5rem; margin-top: 3rem; max-width: 900px; margin-left: auto; margin-right: auto;
+    }
+    .role-card { border-radius: var(--radius); padding: 2rem; }
+    .admin-card {
+      background: rgba(19,91,153,0.1);
+      border: 1px solid rgba(15,138,219,0.25);
+    }
+    [data-theme="light"] .admin-card { background: rgba(15,138,219,0.07); border-color: rgba(15,138,219,0.3); }
+    .emp-card {
+      background: rgba(22,163,74,0.07);
+      border: 1px solid rgba(22,163,74,0.2);
+    }
+    [data-theme="light"] .emp-card { background: rgba(22,163,74,0.05); border-color: rgba(22,163,74,0.25); }
+    .role-badge {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.3rem 0.75rem; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 700; margin-bottom: 1rem;
+    }
+    .admin-badge { background: rgba(15,138,219,0.15); color: var(--blue); }
+    .emp-badge   { background: rgba(22,163,74,0.12); color: #16a34a; }
+    .role-title  { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text); }
+    .role-desc   { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.6; }
+    .role-perms  { display: flex; flex-direction: column; gap: 0.4rem; }
+    .role-perm   { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--text-muted); }
+    .role-perm::before { content: '✓'; font-weight: 700; font-size: 0.75rem; }
+    .admin-card .role-perm::before { color: var(--blue); }
+    .emp-card   .role-perm::before { color: #16a34a; }
+    .role-creds { margin-top: 1.5rem; padding: 0.75rem; background: var(--surface); border-radius: 8px; border: 1px solid var(--border); font-size: 0.78rem; color: var(--text-muted); }
+    .role-creds strong { display: block; margin-bottom: 0.25rem; color: var(--text); font-size: 0.8rem; }
+    .role-creds code { font-family: monospace; color: var(--blue); font-size: 0.75rem; }
+
+    /* ── SECURITY ── */
+    .security-section { padding: 5rem 5vw; background: var(--bg); text-align: center; }
+    .security-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 1rem; max-width: 900px; margin: 3rem auto 0;
+    }
+    .security-item {
+      padding: 1.25rem; background: var(--card-bg);
+      border: 1px solid var(--card-border); border-radius: var(--radius);
+      text-align: center; transition: all 0.25s;
+    }
+    .security-item:hover { border-color: rgba(15,138,219,0.3); background: rgba(15,138,219,0.05); }
+    .security-icon { font-size: 1.5rem; margin-bottom: 0.6rem; }
+    .security-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--text); }
+    .security-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* ── STACK ── */
+    .stack-section { padding: 4rem 5vw; background: var(--bg-2); text-align: center; }
+    .stack-chips { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-top: 2rem; }
+    .stack-chip {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.5rem 1rem; background: var(--card-bg);
+      border: 1px solid var(--card-border); border-radius: 20px;
+      font-size: 0.82rem; font-weight: 500; color: var(--text-muted); transition: all 0.2s;
+    }
+    .stack-chip:hover { background: rgba(15,138,219,0.08); border-color: rgba(15,138,219,0.3); color: var(--text); }
+    .stack-chip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-light); }
+    [data-theme="light"] .stack-chip-dot { background: var(--blue); }
+
+    /* ── CTA ── */
+    .cta-section { padding: 7rem 5vw; text-align: center; background: var(--bg); position: relative; overflow: hidden; }
+    [data-theme="dark"] .cta-section::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center, rgba(15,138,219,0.08) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .cta-headline { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 1rem; color: var(--text); }
+    .cta-headline em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--blue-light), var(--blue));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    [data-theme="light"] .cta-headline em {
+      background: linear-gradient(90deg, var(--blue), var(--blue-dark));
+      -webkit-background-clip: text; background-clip: text;
+    }
+    .cta-sub { font-size: 1.05rem; color: var(--text-muted); margin-bottom: 2.5rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--footer-bg); border-top: 1px solid var(--border);
+      padding: 2rem 5vw;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 0.6rem; font-family: var(--font-display); font-weight: 800; font-size: 0.95rem; color: var(--text-muted); }
+    .footer-brand img { width: 24px; height: 24px; object-fit: contain; opacity: 0.6; }
+    footer p { font-size: 0.8rem; color: var(--text-faint); }
+    .footer-links { display: flex; gap: 1.5rem; list-style: none; }
+    .footer-links a { font-size: 0.8rem; color: var(--text-faint); transition: color 0.2s; }
+    .footer-links a:hover { color: var(--blue); }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .ai-grid { grid-template-columns: 1fr; }
+      .roles-grid { grid-template-columns: 1fr; }
+      .proof-strip { gap: 1.5rem; }
+      .proof-divider { display: none; }
+      footer { flex-direction: column; text-align: center; }
+      .footer-links { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav id="main-nav">
+    <div class="nav-brand">
+      <img src="images/workbuddy.png" alt="WorkBuddy" />
+      <span>WorkBuddy</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#ai">AI</a></li>
+      <li><a href="#roles">Access</a></li>
+      <li><a href="#security">Security</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">🌙</button>
+      <button class="btn-nav btn-nav-ghost" onclick="window.location.href='index.html'">Sign in</button>
+      <button class="btn-nav btn-nav-primary" onclick="window.location.href='index.html'">Launch App →</button>
+    </div>
+  </nav>
+
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow">
+      <div class="eyebrow-dot"></div>
+      AI-Powered HR Platform
+    </div>
+
+    <h1 class="hero-headline">
+      HR that works as hard<br />as your <em>people do</em>
+    </h1>
+
+    <p class="hero-sub">
+      WorkBuddy brings employee management, AI recruitment screening, payroll, attendance, and smart HR insights into one clean, fast platform.
+    </p>
+
+    <div class="hero-actions">
+      <button class="btn-hero-primary" onclick="window.location.href='index.html'">
+        Launch WorkBuddy
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <button class="btn-hero-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">
+        See all features
+      </button>
+    </div>
+
+    <!--
+      ═══════════════════════════════════════
+      HERO ILLUSTRATION — HOW TO SWAP IMAGES
+      ═══════════════════════════════════════
+      Dark mode image:  images/hero-dark.png
+      Light mode image: images/hero-light.png
+
+      To swap: just replace those two files in the images/ folder.
+      The correct one shows automatically based on the active theme.
+      Recommended width: 1200px. Any height works.
+      ═══════════════════════════════════════
+    -->
+    <div class="hero-image-wrap">
+      <img id="hero-img-dark"  class="hero-img" src="images/hero-dark.png"  alt="WorkBuddy Dashboard — Dark Mode" />
+      <img id="hero-img-light" class="hero-img" src="images/hero-light.png" alt="WorkBuddy Dashboard — Light Mode" />
+    </div>
+  </section>
+
+
+  <!-- PROOF STRIP -->
+  <div class="proof-strip">
+    <div class="proof-item"><span class="proof-num">8</span><span class="proof-lbl">Core HR Modules</span></div>
+    <div class="proof-divider"></div>
+    <div class="proof-item"><span class="proof-num">5</span><span class="proof-lbl">AI-Powered Features</span></div>
+    <div class="proof-divider"></div>
+    <div class="proof-item"><span class="proof-num">2</span><span class="proof-lbl">Role Dashboards</span></div>
+    <div class="proof-divider"></div>
+    <div class="proof-item"><span class="proof-num">5</span><span class="proof-lbl">Security Layers</span></div>
+    <div class="proof-divider"></div>
+    <div class="proof-item"><span class="proof-num">100%</span><span class="proof-lbl">Runs Offline</span></div>
+  </div>
+
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="section-label">Everything you need</div>
+    <h2 class="section-headline reveal">Complete HR coverage, nothing missing</h2>
+    <p class="section-sub reveal">Every feature a growing company needs — from the first hire to monthly payroll, all in one place.</p>
+    <div class="features-grid" id="features-grid"></div>
+  </section>
+
+
+  <!-- AI SPOTLIGHT -->
+  <section class="ai-section" id="ai">
+    <div class="ai-grid">
+      <div>
+        <div class="section-label">Powered by Groq</div>
+        <h2 class="section-headline reveal">AI that actually does the work</h2>
+        <p class="section-sub reveal">WorkBuddy uses Groq's LLM inference to bring five distinct AI features into the platform — not a chatbot bolted on, but intelligence woven through every part of HR.</p>
+        <div class="ai-features-list" id="ai-features-list"></div>
+      </div>
+      <div class="chat-mockup reveal">
+        <div class="chat-mockup-header">
+          <div class="chat-mockup-avatar">🤖</div>
+          <div>
+            <div class="chat-mockup-name">WorkBuddy AI</div>
+            <div class="chat-mockup-status">Powered by Groq · llama-3.3-70b</div>
+          </div>
+          <div class="chat-online"></div>
+        </div>
+        <div class="chat-messages-mock">
+          <div class="chat-msg-mock user">
+            <div class="chat-mini-avatar user"></div>
+            <div class="chat-bubble-mock chat-bubble-user">How can I reduce employee turnover in my engineering team?</div>
+          </div>
+          <div class="chat-msg-mock">
+            <div class="chat-mini-avatar ai"></div>
+            <div class="chat-bubble-mock chat-bubble-ai">
+              Great question. The most effective strategies are:<br><br>
+              <strong>1. Career pathing</strong> — engineers leave when they can't see a future. Define clear progression levels.<br><br>
+              <strong>2. Recognition</strong> — implement regular 1:1s and peer shoutouts.<br><br>
+              <strong>3. Compensation benchmarking</strong> — review salaries against market every 6 months.
+            </div>
+          </div>
+          <div class="chat-msg-mock">
+            <div class="chat-mini-avatar ai"></div>
+            <div class="typing-mock"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+        <div class="chat-input-mock">
+          <div class="chat-input-mock-field">Ask anything about HR...</div>
+          <div class="chat-send-mock">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ROLES -->
+  <section class="roles-section" id="roles">
+    <div style="text-align:center">
+      <div class="section-label" style="justify-content:center">Role-based access</div>
+      <h2 class="section-headline reveal" style="margin:0 auto 0.75rem;text-align:center">Two complete experiences,<br>one codebase</h2>
+      <p class="section-sub reveal" style="margin:0 auto 3rem;text-align:center">Log in as Admin or Employee — the app detects your role and shows a completely different dashboard.</p>
+    </div>
+    <div class="roles-grid">
+      <div class="role-card admin-card reveal">
+        <span class="role-badge admin-badge">🔑 Admin</span>
+        <div class="role-title">HR Manager View</div>
+        <p class="role-desc">Full company control. Manage everything from one intelligent dashboard.</p>
+        <div class="role-perms">
+          <div class="role-perm">Company-wide dashboard and analytics</div>
+          <div class="role-perm">Add, edit, and deactivate employees</div>
+          <div class="role-perm">Manage job postings and screen candidates</div>
+          <div class="role-perm">Approve or reject leave requests</div>
+          <div class="role-perm">Process monthly payroll in bulk</div>
+          <div class="role-perm">Conduct and view performance reviews</div>
+          <div class="role-perm">Full audit log and security controls</div>
+          <div class="role-perm">AI strategy and analytics assistant</div>
+        </div>
+        <div class="role-creds">
+          <strong>Demo credentials</strong>
+          Email: <code>admin@workbuddy.com</code><br/>
+          Password: <code>admin123</code>
+        </div>
+      </div>
+      <div class="role-card emp-card reveal">
+        <span class="role-badge emp-badge">👤 Employee</span>
+        <div class="role-title">Staff Member View</div>
+        <p class="role-desc">Your own personal HR portal. Everything about your work life, at a glance.</p>
+        <div class="role-perms">
+          <div class="role-perm">Personal dashboard with live clock-in</div>
+          <div class="role-perm">View and edit personal profile</div>
+          <div class="role-perm">Clock in and out, view attendance history</div>
+          <div class="role-perm">Apply for leave and track request status</div>
+          <div class="role-perm">View and download payslips</div>
+          <div class="role-perm">View performance reviews and AI summaries</div>
+          <div class="role-perm">Private AI assistant for HR questions</div>
+        </div>
+        <div class="role-creds">
+          <strong>Demo credentials</strong>
+          Email: <code>john@workbuddy.com</code><br/>
+          Password: <code>emp123</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- SECURITY -->
+  <section class="security-section" id="security">
+    <div class="section-label" style="justify-content:center">Built secure</div>
+    <h2 class="section-headline reveal" style="margin:0 auto 0.75rem;text-align:center">Security you can see</h2>
+    <p class="section-sub reveal" style="margin:0 auto;text-align:center">Five distinct security layers baked in — not added as an afterthought.</p>
+    <div class="security-grid" id="security-grid"></div>
+  </section>
+
+
+  <!-- TECH STACK -->
+  <section class="stack-section">
+    <div class="section-label" style="justify-content:center">Zero dependencies</div>
+    <h2 class="section-headline reveal" style="margin:0 auto;text-align:center;font-size:clamp(1.4rem,3vw,2rem)">Built from scratch, no frameworks</h2>
+    <div class="stack-chips" id="stack-chips"></div>
+  </section>
+
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <h2 class="cta-headline reveal">Ready to see it<br /><em>in action?</em></h2>
+    <p class="cta-sub reveal">Log in with the demo credentials and explore the full platform.</p>
+    <button class="btn-hero-primary" onclick="window.location.href='index.html'">
+      Launch WorkBuddy
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </section>
+
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-brand">
+      <img src="images/workbuddy.png" alt="WorkBuddy" />
+      WorkBuddy
+    </div>
+    <p>Built for university hackathon &copy; 2025</p>
+    <ul class="footer-links">
+      <li><a href="#features">Features</a></li>
+      <li><a href="#ai">AI</a></li>
+      <li><a href="#security">Security</a></li>
+      <li><a href="index.html">Launch App</a></li>
+    </ul>
+  </footer>
+
+
+  <script>
+    // ── CONTENT DATA ─────────────────────────────
+    var features = [
+      { icon: '🏠', title: 'Smart Dashboard', desc: 'Live company stats, attendance trends, department breakdowns, and an AI insight card that updates daily with actionable recommendations.', tag: 'AI-generated daily insight' },
+      { icon: '👥', title: 'Employee Management', desc: 'Full employee directory with search, filters, and profiles. Add, edit, deactivate staff. Export to CSV. AI-generated onboarding checklists for new hires.', tag: 'AI onboarding checklists' },
+      { icon: '💼', title: 'AI Recruitment', desc: 'Post jobs, collect applicants, and let AI screen every candidate against requirements. Each applicant gets a score out of 100 with a full analysis breakdown.', tag: 'AI candidate scoring 0–100' },
+      { icon: '🕐', title: 'Attendance Tracking', desc: 'Clock in/out with late detection, manual admin overrides, department filters, and AI-powered pattern analysis to flag concerning attendance trends.', tag: 'AI anomaly detection' },
+      { icon: '📅', title: 'Leave Management', desc: 'Multi-type leave requests with a full approval workflow. Balance tracking and manager comments visible to both sides.', tag: 'Full approval workflow' },
+      { icon: '💰', title: 'Payroll Processing', desc: 'Automated salary calculation with allowances and deductions. Bulk processing, individual payslips, and print-ready payslip generation.', tag: 'Auto payslip generation' },
+      { icon: '⭐', title: 'Performance Reviews', desc: 'Structured review system with per-category ratings, goal tracking, and AI-written professional summaries that sound like a real HR manager.', tag: 'AI review summaries' },
+      { icon: '🤖', title: 'AI HR Assistant', desc: 'A conversational AI — separate for admins and employees. Admins get strategy help. Employees ask about policies and benefits. Streams word by word like ChatGPT.', tag: 'Powered by Groq LLM' },
+    ];
+
+    var aiFeatures = [
+      { num: '01', title: 'Candidate Screening', desc: 'Every applicant gets scored 0–100 against job requirements. Strengths, concerns, and a hiring recommendation — in seconds.' },
+      { num: '02', title: 'Streaming HR Chat', desc: 'Ask anything HR-related. Responses stream word by word like ChatGPT. Admins and employees each have their own context-aware assistant.' },
+      { num: '03', title: 'Performance Summaries', desc: 'After a review, generate a professional AI-written summary that reads like it came from an experienced HR manager.' },
+      { num: '04', title: 'Onboarding Checklists', desc: 'Add a new employee and get a personalised 3-week onboarding plan tailored to their role and department, instantly.' },
+      { num: '05', title: 'Attendance Insights', desc: 'Detect patterns in attendance data. Flag issues like chronic lateness or sudden absences with a constructive, empathetic analysis.' },
+    ];
+
+    var securityItems = [
+      { icon: '🔒', title: 'SHA-256 Hashing', desc: 'Passwords are hashed before storage. The real password is never saved anywhere.' },
+      { icon: '🛡️', title: 'Rate Limiting', desc: 'Five failed login attempts triggers a 30-second lockout. Brute force blocked.' },
+      { icon: '⏱️', title: 'Session Timeout', desc: 'Automatic logout after 10 minutes of inactivity with a 2-minute warning.' },
+      { icon: '📋', title: 'Audit Log', desc: 'Every significant action is logged — who did it, when, and what changed.' },
+      { icon: '👁️', title: 'Privacy Notice', desc: 'Transparent data handling. Users consent before the app stores anything.' },
+    ];
+
+    var stackItems = [
+      'HTML5', 'CSS3 Custom Properties', 'Vanilla JavaScript ES6+',
+      'Groq API (llama-3.3-70b)', 'Web Crypto API (SHA-256)',
+      'localStorage Persistence', 'SSE Streaming', 'Lucide Icons'
+    ];
+
+    // ── RENDER CONTENT ────────────────────────────
+    function renderFeatures() {
+      var grid = document.getElementById('features-grid');
+      grid.innerHTML = features.map(function(f) {
+        return '<div class="feature-card reveal">' +
+          '<div class="feature-icon">' + f.icon + '</div>' +
+          '<div class="feature-title">' + f.title + '</div>' +
+          '<p class="feature-desc">' + f.desc + '</p>' +
+          '<div class="feature-tag">✦ ' + f.tag + '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    function renderAIFeatures() {
+      var list = document.getElementById('ai-features-list');
+      list.innerHTML = aiFeatures.map(function(f) {
+        return '<div class="ai-feature-item reveal">' +
+          '<div class="ai-feature-num">' + f.num + '</div>' +
+          '<div>' +
+            '<div class="ai-feature-title">' + f.title + '</div>' +
+            '<div class="ai-feature-desc">' + f.desc + '</div>' +
+          '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    function renderSecurity() {
+      var grid = document.getElementById('security-grid');
+      grid.innerHTML = securityItems.map(function(s) {
+        return '<div class="security-item reveal">' +
+          '<div class="security-icon">' + s.icon + '</div>' +
+          '<div class="security-title">' + s.title + '</div>' +
+          '<div class="security-desc">' + s.desc + '</div>' +
+          '</div>';
+      }).join('');
+    }
+
+    function renderStack() {
+      var wrap = document.getElementById('stack-chips');
+      wrap.innerHTML = stackItems.map(function(t) {
+        return '<div class="stack-chip reveal"><div class="stack-chip-dot"></div>' + t + '</div>';
+      }).join('');
+    }
+
+    // ── THEME TOGGLE ──────────────────────────────
+    function toggleTheme() {
+      var html = document.documentElement;
+      var current = html.getAttribute('data-theme');
+      var next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('wb_landing_theme', next);
+      document.getElementById('theme-btn').textContent = next === 'dark' ? '🌙' : '☀️';
+    }
+
+    function restoreTheme() {
+      var saved = localStorage.getItem('wb_landing_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+      document.getElementById('theme-btn').textContent = saved === 'dark' ? '🌙' : '☀️';
+    }
+
+    // ── SCROLL REVEAL ─────────────────────────────
+    function initReveal() {
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+      document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+    }
+
+    // ── NAV SCROLL ────────────────────────────────
+    window.addEventListener('scroll', function() {
+      var nav = document.getElementById('main-nav');
+      if (window.scrollY > 50) {
+        nav.style.backdropFilter = 'blur(20px)';
+      } else {
+        nav.style.backdropFilter = 'blur(16px)';
+      }
+    });
+
+    // ── INIT ──────────────────────────────────────
+    restoreTheme();
+    renderFeatures();
+    renderAIFeatures();
+    renderSecurity();
+    renderStack();
+    // Re-run reveal after dynamic content is rendered
+    setTimeout(initReveal, 50);
+  </script>
+
+</body>
+</html>
