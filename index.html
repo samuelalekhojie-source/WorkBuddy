@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkBuddy — HR Management</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet" />
+  <!-- Lucide icons — a clean, modern icon library, free to use -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════
+       LOGIN PAGE
+       This is shown first. After login, it hides
+       and the app shell becomes visible.
+  ════════════════════════════════════════════ -->
+  <div id="login-page" class="login-page">
+    <div class="login-card">
+      <div class="login-brand">
+        <img src="images/workbuddy.png" alt="WorkBuddy Logo" class="login-logo" />
+        <div class="login-brand-text">
+          <h1>WorkBuddy</h1>
+          <p>HR Management Platform</p>
+        </div>
+      </div>
+
+      <div class="login-form">
+        <h2>Welcome back</h2>
+        <p class="login-subtitle">Sign in to your workspace</p>
+
+        <div class="form-group">
+          <label for="login-email">Email address</label>
+          <div class="input-wrapper">
+            <i data-lucide="mail" class="input-icon"></i>
+            <input type="email" id="login-email" placeholder="you@company.com" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <div class="input-wrapper">
+            <i data-lucide="lock" class="input-icon"></i>
+            <input type="password" id="login-password" placeholder="••••••••" />
+            <button class="toggle-password" onclick="togglePassword()" type="button">
+              <i data-lucide="eye" id="eye-icon"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="login-error" class="login-error hidden">
+          <i data-lucide="alert-circle"></i>
+          <span>Invalid email or password</span>
+        </div>
+
+        <button class="btn-login" onclick="handleLogin()">
+          Sign in
+          <i data-lucide="arrow-right"></i>
+        </button>
+
+        <!-- Demo credentials shown clearly for hackathon judges -->
+        <div class="demo-credentials">
+          <p class="demo-title">Demo accounts</p>
+          <div class="demo-row" onclick="fillDemo('admin')">
+            <span class="demo-badge admin">Admin</span>
+            <span>admin@workbuddy.com</span>
+            <span class="demo-pwd">admin123</span>
+          </div>
+          <div class="demo-row" onclick="fillDemo('employee')">
+            <span class="demo-badge employee">Employee</span>
+            <span>john@workbuddy.com</span>
+            <span class="demo-pwd">emp123</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right panel: brand visual -->
+    <div class="login-visual">
+      <div class="login-visual-content">
+        <img src="images/workbuddy.png" alt="" class="visual-logo" />
+        <h2>People-first HR,<br/>powered by AI</h2>
+        <p>Manage your workforce smarter — from hiring to payroll, all in one place.</p>
+        <div class="visual-stats">
+          <div class="vstat">
+            <span class="vstat-num">98%</span>
+            <span class="vstat-label">Onboarding accuracy</span>
+          </div>
+          <div class="vstat">
+            <span class="vstat-num">3x</span>
+            <span class="vstat-label">Faster recruitment</span>
+          </div>
+          <div class="vstat">
+            <span class="vstat-num">AI</span>
+            <span class="vstat-label">Powered insights</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- SESSION TIMEOUT WARNING BANNER -->
+  <div id="session-warning" class="session-warning hidden">
+    <i data-lucide="clock"></i>
+    <span>Your session will expire in 2 minutes due to inactivity.</span>
+    <button onclick="SessionTimeout.onActivity()">Stay signed in</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       MAIN APP SHELL
+       Hidden on load. Shown after successful login.
+       Contains: sidebar + topbar + main content area
+  ════════════════════════════════════════════ -->
+  <div id="app-shell" class="app-shell hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <img src="images/workbuddy.png" alt="WorkBuddy" class="sidebar-logo" />
+        <span class="sidebar-brand">WorkBuddy</span>
+        <button class="sidebar-close" onclick="toggleSidebar()">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <!-- Nav items are injected by JS based on role -->
+      <nav class="sidebar-nav" id="sidebar-nav"></nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user" id="sidebar-user">
+          <!-- Filled by JS after login -->
+        </div>
+        <button class="btn-logout" onclick="handleLogout()">
+          <i data-lucide="log-out"></i>
+          <span>Sign out</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- SIDEBAR OVERLAY (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- MAIN AREA -->
+    <div class="main-area">
+
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-btn" onclick="toggleSidebar()">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="topbar-title" id="topbar-title">Dashboard</div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Search -->
+          <div class="topbar-search">
+            <i data-lucide="search"></i>
+            <input type="text" placeholder="Search..." />
+          </div>
+
+          <!-- Notifications -->
+          <button class="topbar-btn notif-btn" id="notif-btn" onclick="toggleNotifications()">
+            <i data-lucide="bell"></i>
+            <span class="notif-badge" id="notif-badge">3</span>
+          </button>
+
+          <!-- Dark mode toggle -->
+          <button class="topbar-btn theme-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle dark mode">
+            <i data-lucide="moon" id="theme-icon"></i>
+          </button>
+
+          <!-- User avatar -->
+          <div class="topbar-avatar" id="topbar-avatar" onclick="toggleUserMenu()">
+            <span id="avatar-initials">AD</span>
+          </div>
+        </div>
+
+        <!-- Notifications dropdown -->
+        <div class="notif-dropdown hidden" id="notif-dropdown">
+          <div class="notif-header">
+            <span>Notifications</span>
+            <button onclick="clearNotifications()">Clear all</button>
+          </div>
+          <div class="notif-list" id="notif-list">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+
+        <!-- User menu dropdown -->
+        <div class="user-menu hidden" id="user-menu">
+          <div class="user-menu-info" id="user-menu-info"></div>
+          <hr/>
+          <button onclick="navigate('profile')"><i data-lucide="user"></i> My Profile</button>
+          <button onclick="navigate('settings')"><i data-lucide="settings"></i> Settings</button>
+          <hr/>
+          <button onclick="handleLogout()" class="logout-item"><i data-lucide="log-out"></i> Sign out</button>
+        </div>
+      </header>
+
+      <!-- PAGE CONTENT — modules are injected here -->
+      <main class="page-content" id="page-content">
+        <!-- Dynamic content loads here -->
+      </main>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════
+       SCRIPTS — order matters here
+       data.js loads first (the data layer)
+       then groq.js (AI layer)
+       then all modules
+       then app.js last (the main controller)
+  ════════════════════════════════════════════ -->
+  <script src="security.js"></script>
+  <script src="data.js"></script>
+  <script src="groq.js"></script>
+  <script src="modules/admin/dashboard.js"></script>
+  <script src="modules/admin/employees.js"></script>
+  <script src="modules/admin/recruitment.js"></script>
+  <script src="modules/admin/attendance.js"></script>
+  <script src="modules/admin/leave.js"></script>
+  <script src="modules/admin/payroll.js"></script>
+  <script src="modules/admin/performance.js"></script>
+  <script src="modules/admin/ai-assistant.js"></script>
+  <script src="modules/employee/dashboard.js"></script>
+  <script src="modules/employee/profile.js"></script>
+  <script src="modules/employee/attendance.js"></script>
+  <script src="modules/employee/leave.js"></script>
+  <script src="modules/employee/payslips.js"></script>
+  <script src="modules/employee/performance.js"></script>
+  <script src="modules/employee/ai-assistant.js"></script>
+  <script src="modules/admin/settings.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
