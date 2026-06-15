@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkBuddy — Job Applications</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --blue: #0f8adb; --blue-light: #2db5ec; --blue-dark: #135b99;
+      --bg: #f0f4f8; --surface: #ffffff; --border: #d1dce8;
+      --text: #0d1b2a; --text-secondary: #4a6080; --text-muted: #8da5be;
+      --success: #16a34a; --success-bg: #dcfce7;
+      --danger: #dc2626; --danger-bg: #fee2e2;
+      --radius: 10px; --font-body: 'Inter', sans-serif; --font-display: 'Plus Jakarta Sans', sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text); }
+
+    header {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 1rem 5vw; display: flex; align-items: center; gap: 0.75rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    header img { width: 36px; height: 36px; object-fit: contain; }
+    header h1 { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; color: var(--blue); }
+    header p { font-size: 0.8rem; color: var(--text-muted); margin-left: auto; }
+
+    .container { max-width: 800px; margin: 2rem auto; padding: 0 1.5rem; }
+
+    .hero-box {
+      background: linear-gradient(135deg, var(--blue-dark), var(--blue));
+      border-radius: var(--radius); padding: 2rem; color: #fff; margin-bottom: 2rem; text-align: center;
+    }
+    .hero-box h2 { font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .hero-box p { opacity: 0.85; font-size: 0.95rem; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .card-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; }
+
+    .job-card {
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem;
+      margin-bottom: 1rem; cursor: pointer; transition: all 0.2s;
+    }
+    .job-card:hover { border-color: var(--blue); box-shadow: 0 4px 16px rgba(15,138,219,0.1); }
+    .job-card.selected { border-color: var(--blue); background: #e8f4fd; }
+    .job-title { font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 0.35rem; }
+    .job-meta { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .job-meta span { font-size: 0.78rem; color: var(--text-muted); }
+    .job-badge { display: inline-flex; padding: 0.2rem 0.6rem; background: #e8f4fd; color: var(--blue); border-radius: 20px; font-size: 0.72rem; font-weight: 600; margin-top: 0.5rem; }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
+    .form-group label { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
+    .form-group input, .form-group textarea, .form-group select {
+      padding: 0.65rem 0.9rem; border: 1.5px solid var(--border);
+      border-radius: 6px; font-family: var(--font-body); font-size: 0.9rem;
+      color: var(--text); background: var(--surface); transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(15,138,219,0.1);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .btn-submit {
+      width: 100%; padding: 0.85rem; background: var(--blue); color: #fff;
+      border: none; border-radius: 6px; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; font-family: var(--font-body);
+    }
+    .btn-submit:hover { background: var(--blue-dark); transform: translateY(-1px); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .success-box {
+      text-align: center; padding: 2.5rem; background: var(--success-bg);
+      border: 1px solid var(--success); border-radius: var(--radius); display: none;
+    }
+    .success-box .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .success-box h3 { font-family: var(--font-display); font-size: 1.3rem; color: var(--success); margin-bottom: 0.5rem; }
+    .success-box p { color: var(--text-secondary); font-size: 0.9rem; }
+
+    .no-jobs { text-align: center; padding: 2rem; color: var(--text-muted); }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="images/workbuddy.png" alt="WorkBuddy" />
+    <h1>WorkBuddy</h1>
+    <p>Careers Portal</p>
+  </header>
+
+  <div class="container">
+    <div class="hero-box">
+      <h2>Join Our Team</h2>
+      <p>Browse open positions and apply directly. We'll review your application and get back to you.</p>
+    </div>
+
+    <!-- Step 1: Pick a job -->
+    <div class="card" id="step-jobs">
+      <div class="card-title">Open Positions</div>
+      <div id="jobs-list">
+        <div class="no-jobs">Loading jobs...</div>
+      </div>
+    </div>
+
+    <!-- Step 2: Application form (hidden until job selected) -->
+    <div class="card" id="step-form" style="display:none">
+      <div class="card-title">Your Application</div>
+      <div id="selected-job-summary" style="padding:0.75rem;background:#e8f4fd;border-radius:6px;margin-bottom:1.25rem;font-size:0.875rem;color:var(--blue-dark)"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Full Name *</label>
+          <input type="text" id="app-name" placeholder="Your full name" />
+        </div>
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" id="app-email" placeholder="you@email.com" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="tel" id="app-phone" placeholder="+234 800 000 0000" />
+        </div>
+        <div class="form-group">
+          <label>Years of Experience *</label>
+          <input type="text" id="app-exp" placeholder="e.g. 3 years" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Skills (comma-separated) *</label>
+        <input type="text" id="app-skills" placeholder="e.g. React, Node.js, TypeScript" />
+      </div>
+      <div class="form-group">
+        <label>Cover Letter *</label>
+        <textarea id="app-cover" rows="6" placeholder="Tell us why you're the right fit for this role. Highlight your relevant experience and what excites you about this opportunity..."></textarea>
+      </div>
+
+      <button class="btn-submit" id="submit-btn" onclick="submitApplication()">
+        Submit Application
+      </button>
+    </div>
+
+    <!-- Success state -->
+    <div class="success-box" id="success-box">
+      <div class="icon">&#127881;</div>
+      <h3>Application Submitted!</h3>
+      <p>Thank you for applying. Our HR team will review your application and get back to you within 3-5 business days.</p>
+      <p style="margin-top:0.75rem;font-size:0.8rem;color:var(--text-muted)">You can close this page now.</p>
+    </div>
+  </div>
+
+  <script>
+    // Read from the same localStorage as the main app
+    function getJobPostings() {
+      try { return JSON.parse(localStorage.getItem('wb_jobPostings')) || []; }
+      catch { return []; }
+    }
+    function getApplicants() {
+      try { return JSON.parse(localStorage.getItem('wb_applicants')) || []; }
+      catch { return []; }
+    }
+    function saveApplicants(data) {
+      localStorage.setItem('wb_applicants', JSON.stringify(data));
+    }
+    function addNotification(msg) {
+      try {
+        const notifs = JSON.parse(localStorage.getItem('wb_notifications')) || [];
+        notifs.unshift({ id: 'n'+Date.now(), message: msg, time: 'Just now', read: false, type: 'recruitment' });
+        localStorage.setItem('wb_notifications', JSON.stringify(notifs));
+      } catch {}
+    }
+
+    let selectedJobId = null;
+
+    function renderJobs() {
+      const jobs = getJobPostings().filter(j => j.status === 'open');
+      const list = document.getElementById('jobs-list');
+
+      if (!jobs.length) {
+        list.innerHTML = '<div class="no-jobs">No open positions at the moment. Check back soon!</div>';
+        return;
+      }
+
+      list.innerHTML = jobs.map(job => `
+        <div class="job-card" id="job-${job.id}" onclick="selectJob('${job.id}')">
+          <div class="job-title">${job.title}</div>
+          <div class="job-meta">
+            <span>&#128205; ${job.location}</span>
+            <span>&#128188; ${job.type}</span>
+            <span>&#128176; ${job.salary || 'Competitive'}</span>
+          </div>
+          <p style="font-size:0.82rem;color:#4a6080;margin-top:0.5rem;line-height:1.5">${job.description}</p>
+          <div style="margin-top:0.5rem;font-size:0.78rem;color:#8da5be"><strong>Requirements:</strong> ${job.requirements}</div>
+          <span class="job-badge">${job.department}</span>
+        </div>
+      `).join('');
+    }
+
+    function selectJob(jobId) {
+      selectedJobId = jobId;
+      document.querySelectorAll('.job-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('job-' + jobId)?.classList.add('selected');
+
+      const job = getJobPostings().find(j => j.id === jobId);
+      if (!job) return;
+
+      document.getElementById('selected-job-summary').innerHTML =
+        `<strong>Applying for:</strong> ${job.title} &nbsp;|&nbsp; ${job.department} &nbsp;|&nbsp; ${job.location}`;
+      document.getElementById('step-form').style.display = 'block';
+      document.getElementById('step-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function submitApplication() {
+      const name   = document.getElementById('app-name').value.trim();
+      const email  = document.getElementById('app-email').value.trim();
+      const phone  = document.getElementById('app-phone').value.trim();
+      const exp    = document.getElementById('app-exp').value.trim();
+      const skills = document.getElementById('app-skills').value.trim();
+      const cover  = document.getElementById('app-cover').value.trim();
+
+      if (!name || !email || !phone || !exp || !skills || !cover) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+      if (!selectedJobId) {
+        alert('Please select a job position first.');
+        return;
+      }
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+
+      const applicants = getApplicants();
+      // Check for duplicate application
+      const duplicate = applicants.find(a => a.email.toLowerCase() === email.toLowerCase() && a.jobId === selectedJobId);
+      if (duplicate) {
+        alert('You have already applied for this position.');
+        btn.disabled = false;
+        btn.textContent = 'Submit Application';
+        return;
+      }
+
+      const job = getJobPostings().find(j => j.id === selectedJobId);
+      const newApplicant = {
+        id: 'a' + Date.now(),
+        jobId: selectedJobId,
+        name, email, phone,
+        experience: exp,
+        skills,
+        coverLetter: cover,
+        appliedDate: new Date().toISOString().split('T')[0],
+        status: 'pending',
+        aiScore: null,
+        aiAnalysis: null
+      };
+
+      applicants.push(newApplicant);
+      saveApplicants(applicants);
+      addNotification(`New applicant for ${job?.title || 'a position'}: ${name}`);
+
+      // Show success
+      document.getElementById('step-jobs').style.display  = 'none';
+      document.getElementById('step-form').style.display  = 'none';
+      document.getElementById('success-box').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    renderJobs();
+  </script>
+</body>
+</html>

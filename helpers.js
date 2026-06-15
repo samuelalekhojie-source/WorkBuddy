@@ -7,6 +7,25 @@
    every module can access them globally.
 ════════════════════════════════════════════════ */
 
+/* ── SMART AVATAR BUILDER ──
+   Returns HTML for an avatar — photo if available, initials if not.
+   size: CSS size string e.g. "36px" (default)
+   extraStyle: additional inline styles
+── */
+function buildAvatar(user, size = '36px', fontSize = '0.75rem') {
+  const fSize = `font-size:${fontSize};`;
+  const dims  = `width:${size};height:${size};`;
+  if (user?.avatarImg) {
+    return `<div style="${dims}border-radius:50%;overflow:hidden;flex-shrink:0">
+      <img src="${user.avatarImg}" alt="${user.name}" style="width:100%;height:100%;object-fit:cover" />
+    </div>`;
+  }
+  return `<div style="${dims}${fSize}border-radius:50%;background:linear-gradient(135deg,var(--blue-primary),var(--blue-light));color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    ${getInitials(user?.name || '??')}
+  </div>`;
+}
+
+
 function capitalize(str) {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -197,4 +216,119 @@ function viewPayslipModal(userId, payrollId) {
       </button>
     </div>
   `);
+}
+
+
+/* ═══════════════════════════════════════════════
+   BIRTHDAY NOTIFICATIONS
+════════════════════════════════════════════════ */
+function checkBirthdays(currentUser) {
+  const birthdays = getTodayBirthdays();
+  if (!birthdays.length) return;
+
+  birthdays.forEach(person => {
+    const isCurrentUser = person.id === currentUser.id;
+
+    if (isCurrentUser) {
+      // Show a special birthday toast for the logged-in user
+      setTimeout(() => {
+        showBirthdayModal(person);
+      }, 1000);
+    } else if (currentUser.role === 'admin' || true) {
+      // Notify everyone about their colleague's birthday
+      addNotification(`&#127881; Today is ${person.name}'s birthday! Send them a wish.`, 'birthday');
+      showToast(`&#127881; It's ${person.name.split(' ')[0]}'s birthday today!`, 'success');
+    }
+  });
+
+  // Update notification badge
+  updateNotifBadge();
+  loadNotifications();
+}
+
+function showBirthdayModal(person) {
+  openModal(`
+    <div class="modal-body" style="text-align:center;padding:2.5rem">
+      <div style="font-size:4rem;margin-bottom:1rem">&#127881;</div>
+      <h2 style="font-family:var(--font-display);font-size:1.6rem;font-weight:800;margin-bottom:0.5rem">
+        Happy Birthday, ${person.name.split(' ')[0]}!
+      </h2>
+      <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1.5rem">
+        WorkBuddy and your entire team wish you an amazing birthday.<br>
+        May this year bring you great success and joy!
+      </p>
+      <div style="display:flex;justify-content:center;gap:0.5rem;font-size:1.5rem;margin-bottom:1.5rem">
+        &#127880; &#10024; &#127882; &#10024; &#127880;
+      </div>
+      <button class="btn btn-primary" onclick="closeModal()" style="padding:0.75rem 2rem;font-size:1rem">
+        Thank you! &#128515;
+      </button>
+    </div>
+  `);
+}
+
+
+/* ═══════════════════════════════════════════════
+   BIRTHDAY BANNER BUILDER
+   Called from admin dashboard
+════════════════════════════════════════════════ */
+function buildBirthdayBanner() {
+  const birthdays = getTodayBirthdays();
+  if (!birthdays.length) return '';
+
+  const names = birthdays.map(p => p.name.split(' ')[0]).join(', ');
+  return `
+    <div style="background:linear-gradient(135deg,#7c3aed,#a855f7);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;color:#fff">
+      <span style="font-size:2rem">&#127881;</span>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:0.925rem">Birthday Alert!</div>
+        <div style="font-size:0.82rem;opacity:0.85">
+          Today is ${names}'s birthday. Send them a wish and make them feel special!
+        </div>
+      </div>
+      <button class="btn" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3)"
+        onclick="showToast('&#127881; Wish sent to ${names}!', \'success\')">
+        Send Wish &#127881;
+      </button>
+    </div>
+  `;
+}
+
+
+/* ── TOPBAR AVATAR HELPER ── */
+function updateTopbarAvatar(user) {
+  const el = document.getElementById('topbar-avatar');
+  if (!el) return;
+
+  // Fetch full user to get avatarImg
+  const full = getUserById(user.id);
+  if (full?.avatarImg) {
+    el.innerHTML = `<img src="${full.avatarImg}" alt="${full.name}"
+      style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
+  } else {
+    el.innerHTML = `<span id="avatar-initials">${getInitials(user.name)}</span>`;
+  }
+}
+
+
+/* ── AVATAR HTML BUILDER ──
+   Call this anywhere you need to show a user avatar.
+   Automatically shows their photo if they have one,
+   otherwise falls back to initials.
+── */
+function buildAvatar(user, size = 36) {
+  if (!user) return `<div class="emp-avatar" style="width:${size}px;height:${size}px;font-size:${size*0.3}px">?</div>`;
+
+  const full = getUserById(user.id || user) || user;
+  const fontSize = Math.round(size * 0.3);
+
+  if (full.avatarImg) {
+    return `<div style="width:${size}px;height:${size}px;border-radius:50%;overflow:hidden;flex-shrink:0">
+      <img src="${full.avatarImg}" alt="${full.name}" style="width:100%;height:100%;object-fit:cover" />
+    </div>`;
+  }
+
+  return `<div class="emp-avatar" style="width:${size}px;height:${size}px;font-size:${fontSize}px;flex-shrink:0">
+    ${getInitials(full.name || '?')}
+  </div>`;
 }

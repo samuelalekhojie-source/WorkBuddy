@@ -93,67 +93,8 @@ function sendSuggestion(text) {
   if (input) { input.value = text; sendChatMessage(); }
 }
 
-function handleChatKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
-}
 
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-}
 
-function appendChatMessage(text, role) {
-  const messages = document.getElementById('chat-messages');
-  if (!messages) return;
-  const isAI = role === 'assistant';
-  const div  = document.createElement('div');
-  div.className = `chat-msg ${role}`;
-  div.innerHTML = `
-    <div class="chat-avatar ${isAI ? 'ai-avatar' : 'user-avatar'}">
-      ${isAI ? '<i data-lucide="sparkles"></i>' : getInitials(getCurrentUser()?.name || 'AD')}
-    </div>
-    <div class="chat-bubble"><p>${formatChatText(text)}</p></div>
-  `;
-  messages.appendChild(div);
-  lucide.createIcons();
-  messages.scrollTop = messages.scrollHeight;
-}
 
-function appendStreamingBubble(id) {
-  const messages = document.getElementById('chat-messages');
-  if (!messages) return null;
-  const div = document.createElement('div');
-  div.className = 'chat-msg assistant';
-  div.id = id;
-  div.innerHTML = `
-    <div class="chat-avatar ai-avatar"><i data-lucide="sparkles"></i></div>
-    <div class="chat-bubble" id="bubble-${id}"><span class="cursor-blink">|</span></div>
-  `;
-  messages.appendChild(div);
-  lucide.createIcons();
-  messages.scrollTop = messages.scrollHeight;
-  return document.getElementById(`bubble-${id}`);
-}
 
-function appendTypingIndicator(id) {
-  const messages = document.getElementById('chat-messages');
-  if (!messages) return;
-  const div = document.createElement('div');
-  div.className = 'chat-msg assistant'; div.id = id;
-  div.innerHTML = `<div class="chat-avatar ai-avatar"><i data-lucide="sparkles"></i></div><div class="chat-bubble typing-indicator"><span></span><span></span><span></span></div>`;
-  messages.appendChild(div);
-  lucide.createIcons();
-  messages.scrollTop = messages.scrollHeight;
-}
 
-function removeTypingIndicator(id) { document.getElementById(id)?.remove(); }
-
-function formatChatText(text) {
-  return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>');
-}

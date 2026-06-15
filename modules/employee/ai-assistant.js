@@ -34,7 +34,7 @@ function renderEmployeeAI() {
         </div>
         <div class="chat-input-area">
           <div class="chat-input-box">
-            <textarea id="chat-input" placeholder="Ask about your leave balance, payroll, policies..." rows="1" onkeydown="handleEmpChatKey(event)" oninput="autoResize(this)"></textarea>
+            <textarea id="chat-input" placeholder="Ask about your leave balance, payroll, policies..." rows="1" onkeydown="handleChatKey(event)" oninput="autoResize(this)"></textarea>
             <button class="chat-send-btn" id="chat-send-btn" onclick="sendEmpChatMessage()"><i data-lucide="send"></i></button>
           </div>
           <div class="chat-input-hint">Press Enter to send · Shift+Enter for new line</div>
@@ -78,6 +78,3 @@ function sendEmpSuggestion(text) {
   if (input) { input.value = text; sendEmpChatMessage(); }
 }
 
-function handleEmpChatKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendEmpChatMessage(); }
-}

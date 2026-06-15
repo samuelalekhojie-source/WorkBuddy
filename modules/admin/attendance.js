@@ -301,7 +301,3 @@ function exportAttendance() {
   URL.revokeObjectURL(url);
   showToast('Attendance exported.', 'success');
 }
-
-function getAttBadge(status) {
-  return { present:'badge-green', late:'badge-yellow', absent:'badge-red', 'on-leave':'badge-blue' }[status] || 'badge-gray';
-}

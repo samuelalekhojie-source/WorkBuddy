@@ -226,7 +226,16 @@ async function resetDemoData() {
     true
   );
   if (!confirmed) return;
+
+  // Clear version flag so init() re-seeds everything
+  localStorage.removeItem('wb_initialized');
+  localStorage.removeItem('wb_tasks_seeded');
+  localStorage.removeItem('wb_passwords_hashed');
+  localStorage.removeItem('wb_privacy_accepted');
+
   db.reset();
+  db.init();
+
   showToast('Demo data reset successfully!', 'success');
   navigate('admin-dashboard');
 }

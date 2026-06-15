@@ -298,16 +298,4 @@ function saveReview() {
   refreshPage();
 }
 
-function getRatingClass(rating) {
-  if (rating >= 4.5) return 'rating-excellent';
-  if (rating >= 3.5) return 'rating-good';
-  if (rating >= 2.5) return 'rating-average';
-  return 'rating-poor';
-}
 
-function getRatingColor(val) {
-  if (val >= 4) return 'var(--success)';
-  if (val >= 3) return 'var(--blue-primary)';
-  if (val >= 2) return 'var(--warning)';
-  return 'var(--danger)';
-}

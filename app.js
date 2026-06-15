@@ -52,6 +52,10 @@ const ADMIN_NAV = [
   { section: 'AI' },
   { id: 'admin-ai',         icon: 'sparkles',          label: 'AI Assistant' },
 
+  { section: 'Tasks & Interviews' },
+  { id: 'admin-tasks',      icon: 'clipboard-list',    label: 'Task Management' },
+  { id: 'admin-interviews', icon: 'calendar-clock',    label: 'Interviews' },
+
   { section: 'System' },
   { id: 'admin-settings',   icon: 'settings',          label: 'Settings & Docs' },
 ];
@@ -68,6 +72,9 @@ const EMPLOYEE_NAV = [
   { section: 'Finances & Growth' },
   { id: 'emp-payslips',     icon: 'receipt',           label: 'My Payslips' },
   { id: 'emp-performance',  icon: 'star',              label: 'My Performance' },
+
+  { section: 'Work' },
+  { id: 'emp-tasks',        icon: 'clipboard-list',    label: 'My Tasks' },
 
   { section: 'AI' },
   { id: 'emp-ai',           icon: 'sparkles',          label: 'AI Assistant' },
@@ -89,6 +96,8 @@ const ROUTES = {
   'admin-payroll':     () => renderPayroll(),
   'admin-performance': () => renderPerformance(),
   'admin-ai':          () => renderAdminAI(),
+  'admin-tasks':       () => renderTasks(),
+  'admin-interviews':  () => renderInterviews(),
   'admin-settings':    () => renderSettings(),
 
   'emp-dashboard':     () => renderEmployeeDashboard(),
@@ -97,6 +106,7 @@ const ROUTES = {
   'emp-leave':         () => renderEmployeeLeave(),
   'emp-payslips':      () => renderPayslips(),
   'emp-performance':   () => renderEmployeePerformance(),
+  'emp-tasks':         () => renderEmployeeTasks(),
   'emp-ai':            () => renderEmployeeAI(),
 };
 
@@ -272,6 +282,23 @@ function showLogin() {
   lucide.createIcons();
 }
 
+function updateTopbarAvatar(user) {
+  const fullUser   = getUserById(user.id);
+  const topbar     = document.getElementById('topbar-avatar');
+  if (!topbar) return;
+
+  if (fullUser?.avatarImg) {
+    topbar.innerHTML = `<img src="${fullUser.avatarImg}" alt="${user.name}"
+      style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
+    topbar.style.padding = '0';
+    topbar.style.overflow = 'hidden';
+  } else {
+    topbar.innerHTML = `<span id="avatar-initials">${getInitials(user.name)}</span>`;
+    topbar.style.padding = '';
+    topbar.style.overflow = '';
+  }
+}
+
 function showApp(user) {
   document.getElementById('login-page').classList.add('hidden');
   document.getElementById('app-shell').classList.remove('hidden');
@@ -279,14 +306,17 @@ function showApp(user) {
   // Build the sidebar for this user's role
   buildSidebar(user);
 
-  // Update the topbar avatar
-  document.getElementById('avatar-initials').textContent = getInitials(user.name);
+  // Update the topbar avatar — show photo if they have one
+  updateTopbarAvatar(user);
 
   // Update notification badge
   updateNotifBadge();
 
   // Load notifications
   loadNotifications();
+
+  // Check for birthdays today
+  checkBirthdays(user);
 
   // Navigate to the default page based on role
   const defaultRoute = user.role === 'admin' ? 'admin-dashboard' : 'emp-dashboard';
@@ -323,8 +353,15 @@ function buildSidebar(user) {
   }).join('');
 
   // Update the sidebar user info
+  const sidebarFull = getUserById(user.id);
+  const sidebarAvatarHtml = sidebarFull?.avatarImg
+    ? `<div class="sidebar-user-avatar" style="overflow:hidden;padding:0">
+        <img src="${sidebarFull.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />
+       </div>`
+    : `<div class="sidebar-user-avatar">${getInitials(user.name)}</div>`;
+
   document.getElementById('sidebar-user').innerHTML = `
-    <div class="sidebar-user-avatar">${getInitials(user.name)}</div>
+    ${sidebarAvatarHtml}
     <div>
       <div class="sidebar-user-name">${user.name}</div>
       <div class="sidebar-user-role">${user.role === 'admin' ? 'HR Admin' : user.position}</div>

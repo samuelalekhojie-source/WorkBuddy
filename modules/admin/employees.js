@@ -95,7 +95,12 @@ function buildEmployeeRows(employees) {
     <tr>
       <td>
         <div class="emp-cell">
-          <div class="emp-avatar">${getInitials(emp.name)}</div>
+          <div class="emp-avatar" style="overflow:hidden">
+            ${emp.avatarImg
+              ? `<img src="${emp.avatarImg}" alt="${emp.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`
+              : getInitials(emp.name)
+            }
+          </div>
           <div>
             <div class="emp-name">${emp.name}</div>
             <div class="emp-email">${emp.email}</div>
@@ -178,7 +183,12 @@ function viewEmployee(id) {
     <div class="modal-body">
       <!-- Profile header -->
       <div class="profile-header">
-        <div class="profile-avatar-lg">${getInitials(emp.name)}</div>
+        <div class="profile-avatar-lg" style="overflow:hidden">
+          ${emp.avatarImg
+            ? `<img src="${emp.avatarImg}" alt="${emp.name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`
+            : getInitials(emp.name)
+          }
+        </div>
         <div class="profile-meta">
           <h3>${emp.name}</h3>
           <p>${emp.position} · ${emp.department}</p>
@@ -211,6 +221,12 @@ function viewEmployee(id) {
           <span>${formatCurrency(emp.salary)}/month</span>
         </div>
       </div>
+      ${emp.emergencyContact ? `
+      <div style="margin-top:0.75rem;padding:0.75rem;background:var(--danger-bg);border-radius:var(--radius-sm);border-left:3px solid var(--danger)">
+        <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--danger);margin-bottom:0.4rem">&#9888; Emergency Contact</div>
+        <div style="font-size:0.875rem;font-weight:600">${emp.emergencyContact.name} <span style="font-weight:400;color:var(--text-secondary)">· ${emp.emergencyContact.relationship}</span></div>
+        <div style="font-size:0.82rem;color:var(--text-secondary)">${emp.emergencyContact.phone}</div>
+      </div>` : ''}
 
       <!-- Quick stats -->
       <div class="profile-stats">
@@ -319,6 +335,24 @@ function openAddEmployeeModal() {
         </div>
       </div>
 
+      <div style="border-top:1px solid var(--border);margin:0.5rem 0;padding-top:1rem">
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:0.75rem">Emergency Contact</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Contact Name</label>
+            <input type="text" id="new-ec-name" placeholder="e.g. Jane Doe" />
+          </div>
+          <div class="form-group">
+            <label>Relationship</label>
+            <input type="text" id="new-ec-rel" placeholder="e.g. Spouse, Parent" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Contact Phone</label>
+          <input type="tel" id="new-ec-phone" placeholder="+234 800 000 0000" />
+        </div>
+      </div>
+
       <div class="ai-option-box">
         <label class="ai-option-label">
           <input type="checkbox" id="gen-onboarding" checked />
@@ -366,11 +400,16 @@ async function saveNewEmployee() {
     return;
   }
 
+  const ecName  = document.getElementById('new-ec-name').value.trim();
+  const ecRel   = document.getElementById('new-ec-rel').value.trim();
+  const ecPhone = document.getElementById('new-ec-phone').value.trim();
+
   const newEmployee = {
     name, email, password, phone,
     department: dept, position, role,
     salary, joinDate, status,
-    avatar: getInitials(name)
+    avatar: getInitials(name),
+    emergencyContact: ecName ? { name: ecName, relationship: ecRel, phone: ecPhone } : null
   };
 
   const saved = addUser(newEmployee);
@@ -456,6 +495,27 @@ function openEditEmployeeModal(id) {
       <button class="modal-close" onclick="closeModal()"><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
+
+      <!-- Avatar upload at top of edit modal -->
+      <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem;background:var(--surface-2);border-radius:var(--radius-sm);margin-bottom:1rem">
+        <div class="profile-avatar-wrap" style="width:52px;height:52px">
+          <div class="profile-avatar-lg" style="width:52px;height:52px;font-size:1rem;overflow:hidden" id="edit-avatar-preview">
+            ${emp.avatarImg
+              ? `<img src="${emp.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`
+              : getInitials(emp.name)
+            }
+          </div>
+          <label class="avatar-edit-btn" title="Change photo" style="width:20px;height:20px">
+            <i data-lucide="camera"></i>
+            <input type="file" accept="image/*" onchange="handleAdminAvatarUpload(event, '${emp.id}')" />
+          </label>
+        </div>
+        <div>
+          <div style="font-weight:600;font-size:0.875rem">${emp.name}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted)">Click the camera icon to update photo</div>
+        </div>
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label>Full Name</label>
@@ -504,6 +564,23 @@ function openEditEmployeeModal(id) {
           <input type="date" id="edit-joindate" value="${emp.joinDate}" />
         </div>
       </div>
+      <div style="border-top:1px solid var(--border);margin:0.5rem 0;padding-top:1rem">
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:0.75rem">Emergency Contact</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Contact Name</label>
+            <input type="text" id="edit-ec-name" value="${emp.emergencyContact?.name || ''}" placeholder="e.g. Jane Doe" />
+          </div>
+          <div class="form-group">
+            <label>Relationship</label>
+            <input type="text" id="edit-ec-rel" value="${emp.emergencyContact?.relationship || ''}" placeholder="e.g. Spouse" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Contact Phone</label>
+          <input type="tel" id="edit-ec-phone" value="${emp.emergencyContact?.phone || ''}" placeholder="+234 800 000 0000" />
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
@@ -515,6 +592,10 @@ function openEditEmployeeModal(id) {
 }
 
 function saveEditEmployee(id) {
+  const ecName  = document.getElementById('edit-ec-name').value.trim();
+  const ecRel   = document.getElementById('edit-ec-rel').value.trim();
+  const ecPhone = document.getElementById('edit-ec-phone').value.trim();
+
   const updates = {
     name:       document.getElementById('edit-name').value.trim(),
     phone:      document.getElementById('edit-phone').value.trim(),
@@ -524,6 +605,7 @@ function saveEditEmployee(id) {
     salary:     parseInt(document.getElementById('edit-salary').value),
     status:     document.getElementById('edit-status').value,
     joinDate:   document.getElementById('edit-joindate').value,
+    emergencyContact: ecName ? { name: ecName, relationship: ecRel, phone: ecPhone } : null
   };
 
   if (!updates.name || !updates.position) {
@@ -573,4 +655,32 @@ function exportEmployees() {
   a.click();
   URL.revokeObjectURL(url);
   showToast('Employee data exported as CSV.', 'success');
+}
+
+
+/* ── ADMIN AVATAR UPLOAD ── */
+function handleAdminAvatarUpload(event, userId) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    showToast('Image must be under 2MB.', 'error');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    updateUser(userId, { avatarImg: base64 });
+
+    // Update preview inside the modal
+    const preview = document.getElementById('edit-avatar-preview');
+    if (preview) {
+      preview.innerHTML = `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" />`;
+    }
+
+    showToast('Employee photo updated!', 'success');
+    auditLog(`Employee photo updated`, 'employee', `ID: ${userId}`);
+  };
+  reader.readAsDataURL(file);
 }

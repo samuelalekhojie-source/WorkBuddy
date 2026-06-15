@@ -332,11 +332,11 @@ const SEED_DATA = {
 
   // Leave balance per employee (days remaining per type)
   leaveBalances: {
-    "u002": { annual: 15, sick: 8, emergency: 3 },
-    "u003": { annual: 18, sick: 10, emergency: 3 },
-    "u004": { annual: 12, sick: 10, emergency: 3 },
+    "u002": { annual: 15, sick: 8, emergency: 3, maternity: 90, paternity: 14 },
+    "u003": { annual: 18, sick: 10, emergency: 3, maternity: 90, paternity: 14 },
+    "u004": { annual: 12, sick: 10, emergency: 3, maternity: 90, paternity: 14 },
     "u005": { annual: 20, sick: 9, emergency: 2 },
-    "u006": { annual: 20, sick: 10, emergency: 3 },
+    "u006": { annual: 20, sick: 10, emergency: 3, maternity: 90, paternity: 14 },
   }
 };
 
@@ -374,14 +374,19 @@ const db = {
     }
   },
 
-  // Initialize with seed data (only runs once — checks if already initialized)
+  // Initialize with seed data
+  // Version bump forces a re-seed so new features get their data
   init() {
-    if (localStorage.getItem('wb_initialized')) return;
+    const VERSION = 'v4'; // bump this when seed data changes
+    if (localStorage.getItem('wb_initialized') === VERSION) return;
     Object.keys(SEED_DATA).forEach(key => {
       this.set(key, SEED_DATA[key]);
     });
-    localStorage.setItem('wb_initialized', 'true');
-    console.log('✅ WorkBuddy data initialized');
+    // Clear sub-seed flags so they re-run
+    localStorage.removeItem('wb_tasks_seeded');
+    localStorage.removeItem('wb_passwords_hashed');
+    localStorage.setItem('wb_initialized', VERSION);
+    console.log('✅ WorkBuddy data initialized', VERSION);
   },
 
   // Reset everything (useful for testing — call db.reset() in console)
@@ -678,7 +683,7 @@ function addNotification(message, type = 'info') {
 // ── Leave Balances ──
 function getLeaveBalance(userId) {
   const balances = db.get('leaveBalances') || {};
-  return balances[userId] || { annual: 20, sick: 10, emergency: 3 };
+  return balances[userId] || { annual: 20, sick: 10, emergency: 3, maternity: 90, paternity: 14 };
 }
 
 
@@ -727,3 +732,102 @@ function getRatingStars(rating) {
 function generateId(prefix = 'id') {
   return prefix + Date.now() + Math.random().toString(36).slice(2, 6);
 }
+
+
+// ── TASKS ──
+function getTasks()           { return db.get('tasks') || []; }
+function saveTasks(data)      { db.set('tasks', data); }
+function getTasksByUser(uid)  { return getTasks().filter(t => t.assignedTo === uid); }
+function getPendingTasksByUser(uid) { return getTasksByUser(uid).filter(t => t.status !== 'completed'); }
+
+function addTask(task) {
+  const tasks = getTasks();
+  task.id = 'task' + Date.now();
+  task.createdAt = new Date().toISOString().split('T')[0];
+  task.status = 'pending';
+  task.progress = 0;
+  tasks.push(task);
+  saveTasks(tasks);
+  return task;
+}
+
+function updateTask(id, updates) {
+  const tasks = getTasks();
+  const idx = tasks.findIndex(t => t.id === id);
+  if (idx !== -1) { tasks[idx] = { ...tasks[idx], ...updates }; saveTasks(tasks); return tasks[idx]; }
+  return null;
+}
+
+// ── INTERVIEWS ──
+function getInterviews()        { return db.get('interviews') || []; }
+function saveInterviews(data)   { db.set('interviews', data); }
+function getInterviewsByJob(jobId) { return getInterviews().filter(i => i.jobId === jobId); }
+
+function addInterview(interview) {
+  const interviews = getInterviews();
+  interview.id = 'int' + Date.now();
+  interview.status = 'scheduled';
+  interviews.push(interview);
+  saveInterviews(interviews);
+  return interview;
+}
+
+function updateInterview(id, updates) {
+  const interviews = getInterviews();
+  const idx = interviews.findIndex(i => i.id === id);
+  if (idx !== -1) { interviews[idx] = { ...interviews[idx], ...updates }; saveInterviews(interviews); }
+}
+
+// ── BIRTHDAYS ──
+function getTodayBirthdays() {
+  const today = new Date();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return getUsers().filter(u => {
+    if (!u.dateOfBirth) return false;
+    const [, m, d] = u.dateOfBirth.split('-');
+    return m === mm && d === dd;
+  });
+}
+
+// ── SEED TASKS ──
+const SEED_TASKS = [
+  {
+    id: 'task001', title: 'Complete Q2 Report', description: 'Prepare and submit the Q2 performance report covering all KPIs and team metrics for review by management.', assignedTo: 'u002', assignedBy: 'u001', dueDate: '2025-06-20', priority: 'high', status: 'in-progress', progress: 60, createdAt: '2025-06-01'
+  },
+  {
+    id: 'task002', title: 'Update Project Documentation', description: 'Review and update all technical documentation for the current sprint. Ensure all API endpoints are documented.', assignedTo: 'u002', assignedBy: 'u001', dueDate: '2025-06-18', priority: 'medium', status: 'pending', progress: 20, createdAt: '2025-06-05'
+  },
+  {
+    id: 'task003', title: 'Design New Campaign Assets', description: 'Create social media assets and banners for the upcoming product launch campaign. Deliver 5 designs minimum.', assignedTo: 'u003', assignedBy: 'u001', dueDate: '2025-06-25', priority: 'high', status: 'pending', progress: 0, createdAt: '2025-06-07'
+  },
+  {
+    id: 'task004', title: 'Monthly Budget Review', description: 'Analyse last month\'s budget utilisation and prepare variance report for the finance committee meeting.', assignedTo: 'u004', assignedBy: 'u001', dueDate: '2025-06-15', priority: 'high', status: 'completed', progress: 100, createdAt: '2025-06-01'
+  },
+];
+
+const SEED_INTERVIEWS = [
+  {
+    id: 'int001', jobId: 'j001', applicantId: 'a001', applicantName: 'Tunde Fashola',
+    date: '2025-06-17', time: '10:00', duration: '45 mins',
+    interviewer: 'Admin User', format: 'Video Call', notes: 'Focus on React architecture and system design.',
+    status: 'scheduled'
+  },
+  {
+    id: 'int002', jobId: 'j001', applicantId: 'a002', applicantName: 'Blessing Okafor',
+    date: '2025-06-18', time: '14:00', duration: '30 mins',
+    interviewer: 'Admin User', format: 'In-person', notes: 'Portfolio review and culture fit discussion.',
+    status: 'scheduled'
+  },
+];
+
+// Add tasks and interviews to db.init
+const _originalInit = db.init.bind(db);
+db.init = function() {
+  _originalInit();
+  if (!localStorage.getItem('wb_tasks_seeded')) {
+    db.set('tasks', SEED_TASKS);
+    db.set('interviews', SEED_INTERVIEWS);
+    localStorage.setItem('wb_tasks_seeded', 'true');
+  }
+};

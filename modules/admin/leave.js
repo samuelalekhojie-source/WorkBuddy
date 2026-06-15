@@ -57,6 +57,8 @@ function renderLeaveManagement() {
           <option value="Annual Leave">Annual Leave</option>
           <option value="Sick Leave">Sick Leave</option>
           <option value="Emergency Leave">Emergency Leave</option>
+          <option value="Maternity Leave">Maternity Leave</option>
+          <option value="Paternity Leave">Paternity Leave</option>
         </select>
       </div>
     </div>

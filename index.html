@@ -194,8 +194,8 @@
         <div class="user-menu hidden" id="user-menu">
           <div class="user-menu-info" id="user-menu-info"></div>
           <hr/>
-          <button onclick="navigate('profile')"><i data-lucide="user"></i> My Profile</button>
-          <button onclick="navigate('settings')"><i data-lucide="settings"></i> Settings</button>
+          <button onclick="navigate(getCurrentUser()?.role === 'admin' ? 'admin-employees' : 'emp-profile')"><i data-lucide="user"></i> My Profile</button>
+          <button onclick="navigate('admin-settings')"><i data-lucide="settings"></i> Settings</button>
           <hr/>
           <button onclick="handleLogout()" class="logout-item"><i data-lucide="log-out"></i> Sign out</button>
         </div>
@@ -220,6 +220,7 @@
   <script src="security.js"></script>
   <script src="data.js"></script>
   <script src="groq.js"></script>
+  <script src="helpers.js"></script>
   <script src="modules/admin/dashboard.js"></script>
   <script src="modules/admin/employees.js"></script>
   <script src="modules/admin/recruitment.js"></script>
@@ -236,6 +237,9 @@
   <script src="modules/employee/performance.js"></script>
   <script src="modules/employee/ai-assistant.js"></script>
   <script src="modules/admin/settings.js"></script>
+  <script src="modules/admin/tasks.js"></script>
+  <script src="modules/admin/interviews.js"></script>
+  <script src="modules/employee/tasks.js"></script>
   <script src="app.js"></script>
 
 </body>

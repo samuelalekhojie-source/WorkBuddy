@@ -28,6 +28,9 @@ function renderRecruitment() {
         <button class="btn btn-secondary" onclick="showApplicantsView()">
           <i data-lucide="users"></i> All Applicants
         </button>
+        <button class="btn btn-secondary" onclick="showApplyPortalModal()">
+          <i data-lucide="external-link"></i> Apply Portal Link
+        </button>
         <button class="btn btn-primary" onclick="openAddJobModal()">
           <i data-lucide="plus"></i> Post a Job
         </button>
@@ -131,14 +134,17 @@ function buildJobCard(job, allApplicants) {
 
       <div class="job-card-footer">
         <span class="text-xs text-muted">Posted ${formatDate(job.postedDate)}</span>
-        <div style="display:flex;gap:0.5rem">
+        <div class="job-card-actions">
           ${job.status === 'open' ? `
-            <button class="btn btn-secondary" onclick="screenAllApplicants('${job.id}')">
+            <button class="btn btn-secondary btn-sm-icon" onclick="screenAllApplicants('${job.id}')" title="AI Screen All">
               <i data-lucide="sparkles"></i> Screen All
             </button>
           ` : ''}
+          <button class="btn btn-secondary btn-sm-icon" onclick="navigate('admin-interviews')" title="Interviews">
+            <i data-lucide="calendar-clock"></i> ${getInterviewsByJob(job.id).length}
+          </button>
           <button class="btn btn-primary" onclick="viewJobApplicants('${job.id}')">
-            <i data-lucide="users"></i> View Applicants
+            <i data-lucide="users"></i> Applicants
           </button>
         </div>
       </div>
@@ -614,4 +620,42 @@ function getApplicantStatusBadge(status) {
     hired: 'badge-green'
   };
   return map[status] || 'badge-gray';
+}
+
+
+/* ── APPLY PORTAL LINK ── */
+function showApplyPortalModal() {
+  const applyUrl = window.location.href.replace('index.html', 'apply.html').replace(/\/[^/]*$/, '/apply.html');
+  openModal(`
+    <div class="modal-header">
+      <h3>Applicant Portal Link</h3>
+      <button class="modal-close" onclick="closeModal()"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p class="text-secondary text-sm" style="margin-bottom:1rem">
+        Share this link with candidates. They can view all open positions and submit their applications directly. Applications appear instantly in your recruitment module.
+      </p>
+      <div style="display:flex;gap:0.5rem;align-items:center">
+        <input type="text" id="portal-url" value="${applyUrl}" readonly
+          style="flex:1;padding:0.65rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:0.82rem;font-family:monospace" />
+        <button class="btn btn-primary" onclick="copyPortalLink()">
+          <i data-lucide="copy"></i> Copy
+        </button>
+      </div>
+      <div style="margin-top:1rem;display:flex;gap:0.75rem">
+        <button class="btn btn-secondary w-full" onclick="window.open('apply.html', '_blank')">
+          <i data-lucide="external-link"></i> Open Portal
+        </button>
+      </div>
+    </div>
+  `);
+}
+
+function copyPortalLink() {
+  const input = document.getElementById('portal-url');
+  if (input) {
+    navigator.clipboard.writeText(input.value).then(() => {
+      showToast('Portal link copied to clipboard!', 'success');
+    });
+  }
 }
