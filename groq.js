@@ -3,7 +3,7 @@
 ════════════════════════════════════════════════ */
 
 const GROQ_CONFIG = {
-  apiKey: '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',
+  apiKey: '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',
   model: 'llama-3.3-70b-versatile',
   baseURL: 'https://api.groq.com/openai/v1/chat/completions'
 };
