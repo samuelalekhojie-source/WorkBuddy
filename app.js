@@ -409,21 +409,19 @@ function navigate(routeId) {
     document.getElementById('topbar-title').textContent = navItem.label;
   }
 
-  // Clear and render the page content
+  // Show skeleton loader immediately — matches the shape of the real page
   const content = document.getElementById('page-content');
-  content.innerHTML = `
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <span>Loading...</span>
-    </div>
-  `;
+  content.innerHTML = getSkeletonHTML(routeId);
 
-  // Small delay so the loading spinner shows (feels more real)
-  setTimeout(() => {
-    renderFn();
-    lucide.createIcons();
-    currentRoute = routeId;
-  }, 150);
+  // Render real content after a short frame
+  // (enough time for skeleton to paint before JS blocks the thread)
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      renderFn();
+      lucide.createIcons();
+      currentRoute = routeId;
+    }, 180);
+  });
 
   // Close mobile sidebar
   closeSidebar();
@@ -549,6 +547,13 @@ function handleOutsideClick(e) {
   const userMenu = document.getElementById('user-menu');
   if (userMenu && !userMenu.contains(e.target) && !avatar?.contains(e.target)) {
     userMenu.classList.add('hidden');
+  }
+
+  // Close search dropdown
+  const searchWrap = document.getElementById('topbar-search-wrap');
+  const searchDrop = document.getElementById('search-dropdown');
+  if (searchDrop && !searchDrop.contains(e.target) && !searchWrap?.contains(e.target)) {
+    closeSearchDropdown();
   }
 }
 

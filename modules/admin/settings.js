@@ -43,14 +43,14 @@ function renderSettings() {
         <!-- Groq API Config -->
         <div class="card">
           <div class="card-header">
-            <div class="card-title">AI Configuration</div>
+            <div class="card-title">AI Configuration — Groq</div>
             <div class="ai-pulse" style="width:28px;height:28px"><i data-lucide="sparkles"></i></div>
           </div>
           <div class="form-group">
             <label>Groq API Key</label>
             <div class="input-wrapper">
               <i data-lucide="key" class="input-icon"></i>
-              <input type="password" id="groq-key-input" placeholder="gsk_..." value="${GROQ_CONFIG.apiKey !== 'YOUR_GROQ_API_KEY_HERE' ? '••••••••••••••••' : ''}" />
+              <input type="password" id="groq-key-input" placeholder="gsk_..." value="${(typeof GROQ_CONFIG !== 'undefined' && GROQ_CONFIG.apiKey && GROQ_CONFIG.apiKey !== 'YOUR_GROQ_API_KEY_HERE') ? '••••••••••••••••' : ''}" />
             </div>
           </div>
           <div class="form-group">

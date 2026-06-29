@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet" />
   <!-- Lucide icons — a clean, modern icon library, free to use -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <!-- Paystack inline JS — loads the Paystack popup SDK -->
+  <script src="https://js.paystack.co/v1/inline.js"></script>
 </head>
 <body>
 
@@ -157,10 +159,20 @@
 
         <div class="topbar-right">
           <!-- Search -->
-          <div class="topbar-search">
+          <div class="topbar-search" id="topbar-search-wrap">
             <i data-lucide="search"></i>
-            <input type="text" placeholder="Search..." />
+            <input type="text" id="global-search-input"
+              placeholder="Search employees, jobs, pages..."
+              oninput="handleGlobalSearch(this.value)"
+              onkeydown="handleSearchKey(event)"
+              autocomplete="off" />
+            <button id="search-clear-btn" onclick="clearSearch()" style="display:none;color:var(--text-muted);padding:0;background:none;border:none;cursor:pointer">
+              <i data-lucide="x" style="width:14px;height:14px"></i>
+            </button>
           </div>
+
+          <!-- Search results dropdown -->
+          <div id="search-dropdown" class="search-dropdown hidden"></div>
 
           <!-- Notifications -->
           <button class="topbar-btn notif-btn" id="notif-btn" onclick="toggleNotifications()">

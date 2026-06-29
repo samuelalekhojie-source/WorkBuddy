@@ -1,35 +1,27 @@
 /* ═══════════════════════════════════════════════
    RECRUITMENT MODULE
-
-   Handles the full hiring pipeline:
-   1. Job postings — create, view, close positions
-   2. Applicant tracking — all candidates per job
-   3. AI screening — Groq scores each candidate
-      against the job requirements automatically
-   4. Status management — shortlist, reject, hire
 ════════════════════════════════════════════════ */
 
 function renderRecruitment() {
-  const jobs = getJobPostings();
+  const jobs       = getJobPostings();
   const applicants = getApplicants();
-
-  const openJobs    = jobs.filter(j => j.status === 'open').length;
-  const totalApps   = applicants.length;
-  const screened    = applicants.filter(a => a.aiScore !== null).length;
-  const shortlisted = applicants.filter(a => a.status === 'shortlisted').length;
+  const openJobs   = jobs.filter(j => j.status === 'open').length;
+  const totalApps  = applicants.length;
+  const screened   = applicants.filter(a => a.aiScore !== null).length;
+  const shortlisted= applicants.filter(a => a.status === 'shortlisted').length;
 
   setPageContent(`
     <div class="page-header">
       <div class="page-header-text">
         <h2>Recruitment</h2>
-        <p>${openJobs} open positions · ${totalApps} total applicants</p>
+        <p>${openJobs} open position${openJobs !== 1 ? 's' : ''} &middot; ${totalApps} total applicant${totalApps !== 1 ? 's' : ''}</p>
       </div>
       <div class="page-header-actions">
-        <button class="btn btn-secondary" onclick="showApplicantsView()">
-          <i data-lucide="users"></i> All Applicants
-        </button>
         <button class="btn btn-secondary" onclick="showApplyPortalModal()">
-          <i data-lucide="external-link"></i> Apply Portal Link
+          <i data-lucide="external-link"></i> Apply Portal
+        </button>
+        <button class="btn btn-secondary" onclick="showAllApplicantsView()">
+          <i data-lucide="users"></i> All Applicants
         </button>
         <button class="btn btn-primary" onclick="openAddJobModal()">
           <i data-lucide="plus"></i> Post a Job
@@ -37,39 +29,25 @@ function renderRecruitment() {
       </div>
     </div>
 
-    <!-- Stats -->
     <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:1.25rem">
       <div class="stat-card">
         <div class="stat-icon blue"><i data-lucide="briefcase"></i></div>
-        <div class="stat-info">
-          <div class="stat-value">${openJobs}</div>
-          <div class="stat-label">Open Positions</div>
-        </div>
+        <div class="stat-info"><div class="stat-value">${openJobs}</div><div class="stat-label">Open Positions</div></div>
       </div>
       <div class="stat-card">
         <div class="stat-icon indigo"><i data-lucide="users"></i></div>
-        <div class="stat-info">
-          <div class="stat-value">${totalApps}</div>
-          <div class="stat-label">Total Applicants</div>
-        </div>
+        <div class="stat-info"><div class="stat-value">${totalApps}</div><div class="stat-label">Total Applicants</div></div>
       </div>
       <div class="stat-card">
         <div class="stat-icon green"><i data-lucide="sparkles"></i></div>
-        <div class="stat-info">
-          <div class="stat-value">${screened}</div>
-          <div class="stat-label">AI Screened</div>
-        </div>
+        <div class="stat-info"><div class="stat-value">${screened}</div><div class="stat-label">AI Screened</div></div>
       </div>
       <div class="stat-card">
         <div class="stat-icon yellow"><i data-lucide="star"></i></div>
-        <div class="stat-info">
-          <div class="stat-value">${shortlisted}</div>
-          <div class="stat-label">Shortlisted</div>
-        </div>
+        <div class="stat-info"><div class="stat-value">${shortlisted}</div><div class="stat-label">Shortlisted</div></div>
       </div>
     </div>
 
-    <!-- Job Listings -->
     <div id="recruitment-main">
       ${jobs.length === 0
         ? `<div class="card"><div class="empty-state">
@@ -86,10 +64,11 @@ function renderRecruitment() {
 }
 
 function buildJobCard(job, allApplicants) {
-  const jobApps  = allApplicants.filter(a => a.jobId === job.id);
-  const pending  = jobApps.filter(a => a.status === 'pending').length;
-  const screened = jobApps.filter(a => a.aiScore !== null).length;
-  const shortlisted = jobApps.filter(a => a.status === 'shortlisted').length;
+  const jobApps    = allApplicants.filter(a => a.jobId === job.id);
+  const pending    = jobApps.filter(a => a.status === 'pending').length;
+  const screened   = jobApps.filter(a => a.aiScore !== null).length;
+  const shortlisted= jobApps.filter(a => a.status === 'shortlisted').length;
+  const interviews = typeof getInterviews === 'function' ? getInterviews().filter(i => i.jobId === job.id).length : 0;
 
   return `
     <div class="job-card ${job.status === 'closed' ? 'job-closed' : ''}">
@@ -102,90 +81,56 @@ function buildJobCard(job, allApplicants) {
             <span><i data-lucide="clock"></i>${job.type}</span>
           </div>
         </div>
-        <span class="badge ${job.status === 'open' ? 'badge-green' : 'badge-gray'}">
-          ${capitalize(job.status)}
-        </span>
+        <span class="badge ${job.status === 'open' ? 'badge-green' : 'badge-gray'}">${capitalize(job.status)}</span>
       </div>
-
       <p class="job-desc">${job.description}</p>
-
-      <div class="job-salary">
-        <i data-lucide="banknote"></i> ${job.salary}
-      </div>
-
+      <div class="job-salary"><i data-lucide="banknote"></i> ${job.salary || 'Competitive'}</div>
       <div class="job-stats">
-        <div class="jstat">
-          <span class="jstat-num">${jobApps.length}</span>
-          <span class="jstat-lbl">Applied</span>
-        </div>
-        <div class="jstat">
-          <span class="jstat-num">${screened}</span>
-          <span class="jstat-lbl">AI Screened</span>
-        </div>
-        <div class="jstat">
-          <span class="jstat-num">${shortlisted}</span>
-          <span class="jstat-lbl">Shortlisted</span>
-        </div>
-        <div class="jstat">
-          <span class="jstat-num">${pending}</span>
-          <span class="jstat-lbl">Pending</span>
-        </div>
+        <div class="jstat"><span class="jstat-num">${jobApps.length}</span><span class="jstat-lbl">Applied</span></div>
+        <div class="jstat"><span class="jstat-num">${screened}</span><span class="jstat-lbl">Screened</span></div>
+        <div class="jstat"><span class="jstat-num">${shortlisted}</span><span class="jstat-lbl">Shortlisted</span></div>
+        <div class="jstat"><span class="jstat-num">${pending}</span><span class="jstat-lbl">Pending</span></div>
       </div>
-
-      <div class="job-card-footer">
-        <span class="text-xs text-muted">Posted ${formatDate(job.postedDate)}</span>
-        <div class="job-card-actions">
-          ${job.status === 'open' ? `
-            <button class="btn btn-secondary btn-sm-icon" onclick="screenAllApplicants('${job.id}')" title="AI Screen All">
-              <i data-lucide="sparkles"></i> Screen All
-            </button>
-          ` : ''}
-          <button class="btn btn-secondary btn-sm-icon" onclick="navigate('admin-interviews')" title="Interviews">
-            <i data-lucide="calendar-clock"></i> ${getInterviewsByJob(job.id).length}
-          </button>
-          <button class="btn btn-primary" onclick="viewJobApplicants('${job.id}')">
-            <i data-lucide="users"></i> Applicants
-          </button>
-        </div>
+      <div class="job-card-actions">
+        ${job.status === 'open' ? `
+          <button class="btn btn-secondary btn-sm-icon" onclick="screenAllApplicants('${job.id}')" title="AI Screen All">
+            <i data-lucide="sparkles"></i> Screen All
+          </button>` : ''}
+        <button class="btn btn-secondary btn-sm-icon" onclick="navigate('admin-interviews')" title="Interviews">
+          <i data-lucide="calendar-clock"></i> ${interviews}
+        </button>
+        <button class="btn btn-primary" onclick="viewJobApplicants('${job.id}')">
+          <i data-lucide="users"></i> Applicants
+        </button>
       </div>
     </div>
   `;
 }
 
-
-/* ── VIEW APPLICANTS FOR A JOB ── */
 function viewJobApplicants(jobId) {
-  const job = getJobPostings().find(j => j.id === jobId);
+  const job        = getJobPostings().find(j => j.id === jobId);
   if (!job) return;
   const applicants = getApplicantsByJob(jobId);
+  const main       = document.getElementById('recruitment-main');
+  if (!main) return;
 
-  const content = document.getElementById('recruitment-main');
-  if (!content) return;
-
-  content.innerHTML = `
+  main.innerHTML = `
     <div style="margin-bottom:1rem">
       <button class="btn btn-secondary" onclick="renderRecruitment()">
         <i data-lucide="arrow-left"></i> Back to Jobs
       </button>
     </div>
-
     <div class="card" style="margin-bottom:1.25rem">
       <div class="card-header">
         <div>
           <div class="card-title">${job.title}</div>
-          <div class="text-sm text-secondary">${job.department} · ${job.location} · ${job.salary}</div>
+          <div class="text-sm text-secondary">${job.department} &middot; ${job.location} &middot; ${job.salary || 'Competitive'}</div>
         </div>
-        <div style="display:flex;gap:0.5rem;align-items:center">
+        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
           <span class="badge ${job.status === 'open' ? 'badge-green' : 'badge-gray'}">${capitalize(job.status)}</span>
-          ${job.status === 'open' ? `
-            <button class="btn btn-secondary text-sm" onclick="toggleJobStatus('${job.id}')">
-              <i data-lucide="x-circle"></i> Close Position
-            </button>
-          ` : `
-            <button class="btn btn-secondary text-sm" onclick="toggleJobStatus('${job.id}')">
-              <i data-lucide="refresh-cw"></i> Reopen
-            </button>
-          `}
+          ${job.status === 'open'
+            ? `<button class="btn btn-secondary text-sm" onclick="toggleJobStatus('${job.id}')"><i data-lucide="x-circle"></i> Close</button>`
+            : `<button class="btn btn-secondary text-sm" onclick="toggleJobStatus('${job.id}')"><i data-lucide="refresh-cw"></i> Reopen</button>`}
           <button class="btn btn-primary" onclick="screenAllApplicants('${job.id}')">
             <i data-lucide="sparkles"></i> AI Screen All
           </button>
@@ -193,31 +138,23 @@ function viewJobApplicants(jobId) {
       </div>
       <p class="text-sm text-secondary">${job.requirements}</p>
     </div>
-
     <div class="card">
       <div class="card-header">
         <div class="card-title">Applicants (${applicants.length})</div>
-        <div style="display:flex;gap:0.5rem">
-          <select onchange="filterApplicantsByStatus(this.value, '${jobId}')" style="padding:0.4rem 0.6rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.82rem">
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="shortlisted">Shortlisted</option>
-            <option value="rejected">Rejected</option>
-            <option value="hired">Hired</option>
-          </select>
-        </div>
+        <select onchange="filterApplicantsByStatus(this.value, '${jobId}')"
+          style="padding:0.4rem 0.6rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-size:0.82rem">
+          <option value="">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="shortlisted">Shortlisted</option>
+          <option value="rejected">Rejected</option>
+          <option value="hired">Hired</option>
+        </select>
       </div>
-
       ${applicants.length === 0
-        ? `<div class="empty-state">
-            <i data-lucide="user-x"></i>
-            <h3>No applicants yet</h3>
-            <p>Share the job link to start receiving applications</p>
-           </div>`
+        ? `<div class="empty-state"><i data-lucide="user-x"></i><h3>No applicants yet</h3><p>Share the apply portal link to receive applications</p></div>`
         : `<div class="applicants-list" id="applicants-list-${jobId}">
             ${applicants.map(a => buildApplicantCard(a, job)).join('')}
-           </div>`
-      }
+           </div>`}
     </div>
   `;
   lucide.createIcons();
@@ -227,24 +164,28 @@ function buildApplicantCard(applicant, job) {
   const scoreColor = applicant.aiScore >= 80 ? 'var(--success)'
     : applicant.aiScore >= 60 ? 'var(--warning)'
     : applicant.aiScore !== null ? 'var(--danger)' : 'var(--text-muted)';
-
-  const recBadge = {
-    'Strong Yes': 'badge-green',
-    'Yes': 'badge-blue',
-    'Maybe': 'badge-yellow',
-    'No': 'badge-red'
-  };
+  const recBadge = { 'Strong Yes':'badge-green','Yes':'badge-blue','Maybe':'badge-yellow','No':'badge-red' };
 
   return `
     <div class="applicant-card" id="app-${applicant.id}">
+
+      <!-- Header -->
       <div class="applicant-header">
         <div class="activity-avatar">${getInitials(applicant.name)}</div>
         <div class="applicant-info">
           <div class="applicant-name">${applicant.name}</div>
           <div class="applicant-sub">
-            <span><i data-lucide="briefcase"></i>${applicant.experience} experience</span>
+            <span><i data-lucide="briefcase"></i>${applicant.experience}</span>
             <span><i data-lucide="mail"></i>${applicant.email}</span>
-            <span><i data-lucide="calendar"></i>Applied ${formatDate(applicant.appliedDate)}</span>
+            ${applicant.phone ? `<span><i data-lucide="phone"></i>${applicant.phone}</span>` : ''}
+            <span><i data-lucide="calendar"></i>${formatDate(applicant.appliedDate)}</span>
+          </div>
+          ${applicant.currentRole ? `<div style="font-size:0.75rem;color:var(--text-secondary);margin-top:0.15rem">Current role: <strong>${applicant.currentRole}</strong></div>` : ''}
+          <div style="display:flex;gap:0.75rem;margin-top:0.3rem;flex-wrap:wrap">
+            ${applicant.linkedin ? `<a href="${applicant.linkedin}" target="_blank" style="font-size:0.72rem;color:var(--blue-primary);display:flex;align-items:center;gap:0.25rem;text-decoration:none"><i data-lucide="linkedin" style="width:12px;height:12px"></i>LinkedIn</a>` : ''}
+            ${applicant.portfolio ? `<a href="${applicant.portfolio}" target="_blank" style="font-size:0.72rem;color:var(--blue-primary);display:flex;align-items:center;gap:0.25rem;text-decoration:none"><i data-lucide="globe" style="width:12px;height:12px"></i>Portfolio</a>` : ''}
+            ${applicant.salaryExpect ? `<span style="font-size:0.72rem;color:var(--warning);font-weight:600">Expected: ${applicant.salaryExpect}</span>` : ''}
+            ${applicant.availability ? `<span style="font-size:0.72rem;color:var(--success);font-weight:600">Available: ${applicant.availability}</span>` : ''}
           </div>
         </div>
         <div class="applicant-score-wrap">
@@ -253,18 +194,49 @@ function buildApplicantCard(applicant, job) {
                 <span class="score-num">${applicant.aiScore}</span>
                 <span class="score-lbl">AI Score</span>
                </div>`
-            : `<div class="ai-score unscreened">
-                <i data-lucide="sparkles"></i>
-                <span>Not screened</span>
-               </div>`
-          }
+            : `<div class="ai-score unscreened"><i data-lucide="sparkles"></i><span>Unscreened</span></div>`}
         </div>
       </div>
 
+      <!-- Skills -->
       <div class="applicant-skills">
-        ${applicant.skills.split(',').map(s => `<span class="skill-chip">${s.trim()}</span>`).join('')}
+        ${(applicant.skills || '').split(',').map(s => `<span class="skill-chip">${s.trim()}</span>`).join('')}
       </div>
 
+      <!-- Cover letter preview -->
+      ${applicant.coverLetter ? `
+        <div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:0.75rem;margin-bottom:0.6rem;border-left:3px solid var(--border-light)">
+          <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.3rem">Cover Letter</div>
+          <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.6">
+            ${applicant.coverLetter.slice(0,220)}${applicant.coverLetter.length > 220
+              ? `... <button onclick="viewFullCoverLetter('${applicant.id}')" style="background:none;border:none;color:var(--blue-primary);font-size:0.78rem;cursor:pointer;padding:0;font-weight:600">Read full</button>`
+              : ''}
+          </p>
+        </div>
+      ` : ''}
+
+      <!-- CV file -->
+      ${applicant.cvFileName ? `
+        <div style="display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0.75rem;background:var(--success-bg);border:1px solid rgba(22,163,74,0.2);border-radius:var(--radius-sm);margin-bottom:0.6rem">
+          <i data-lucide="file-text" style="color:var(--success);width:15px;height:15px;flex-shrink:0"></i>
+          <span style="font-size:0.78rem;font-weight:600;color:var(--success);flex:1">${applicant.cvFileName}</span>
+          ${applicant.cvFile
+            ? `<button onclick="downloadApplicantCV('${applicant.id}')" class="btn btn-ghost" style="font-size:0.72rem;color:var(--success);padding:0.2rem 0.5rem">
+                <i data-lucide="download"></i> Download
+               </button>`
+            : ''}
+        </div>
+      ` : ''}
+
+      <!-- Other docs -->
+      ${(applicant.clFileName || applicant.pfFileName) ? `
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.6rem">
+          ${applicant.clFileName ? `<span style="font-size:0.72rem;background:var(--blue-faint);color:var(--blue-primary);padding:0.2rem 0.65rem;border-radius:20px;font-weight:600"><i data-lucide="file"></i> ${applicant.clFileName}</span>` : ''}
+          ${applicant.pfFileName ? `<span style="font-size:0.72rem;background:var(--blue-faint);color:var(--blue-primary);padding:0.2rem 0.65rem;border-radius:20px;font-weight:600"><i data-lucide="image"></i> ${applicant.pfFileName}</span>` : ''}
+        </div>
+      ` : ''}
+
+      <!-- AI Analysis -->
       ${applicant.aiAnalysis ? `
         <div class="ai-analysis-box">
           <div class="ai-analysis-header">
@@ -275,28 +247,25 @@ function buildApplicantCard(applicant, job) {
           <p class="ai-analysis-summary">${applicant.aiAnalysis.summary}</p>
           <div class="ai-analysis-lists">
             <div>
-              <div class="analysis-label">✅ Strengths</div>
+              <div class="analysis-label">&#10003; Strengths</div>
               ${(applicant.aiAnalysis.strengths || []).map(s => `<div class="analysis-item">${s}</div>`).join('')}
             </div>
             <div>
-              <div class="analysis-label">⚠️ Concerns</div>
+              <div class="analysis-label">&#9888; Concerns</div>
               ${(applicant.aiAnalysis.concerns || []).map(c => `<div class="analysis-item concern">${c}</div>`).join('')}
             </div>
           </div>
         </div>
       ` : ''}
 
+      <!-- Actions -->
       <div class="applicant-footer">
         <span class="badge ${getApplicantStatusBadge(applicant.status)}">${capitalize(applicant.status)}</span>
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-          <button class="btn btn-secondary text-sm" onclick="viewCoverLetter('${applicant.id}')">
-            <i data-lucide="file-text"></i> Cover Letter
-          </button>
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap">
           ${applicant.aiScore === null ? `
             <button class="btn btn-secondary text-sm" onclick="screenSingleApplicant('${applicant.id}', '${job.id}')">
               <i data-lucide="sparkles"></i> AI Screen
-            </button>
-          ` : ''}
+            </button>` : ''}
           <button class="btn btn-secondary text-sm" onclick="updateApplicantStatus('${applicant.id}', 'shortlisted', '${job.id}')">
             <i data-lucide="star"></i> Shortlist
           </button>
@@ -312,110 +281,22 @@ function buildApplicantCard(applicant, job) {
   `;
 }
 
-
-/* ── AI SCREEN SINGLE APPLICANT ── */
-async function screenSingleApplicant(applicantId, jobId) {
-  const applicant = getApplicants().find(a => a.id === applicantId);
-  const job = getJobPostings().find(j => j.id === jobId);
-  if (!applicant || !job) return;
-
-  // Show loading state on the card
-  const card = document.getElementById(`app-${applicantId}`);
-  if (card) {
-    const btn = card.querySelector('button[onclick*="screenSingle"]');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner" style="width:14px;height:14px"></div> Screening...'; }
-  }
-
-  const result = await screenCandidate(job, applicant);
-
-  // Save to data
-  updateApplicant(applicantId, {
-    aiScore: result.score,
-    aiAnalysis: result,
-    status: result.recommendation === 'Strong Yes' ? 'shortlisted' : applicant.status
-  });
-
-  showToast(`${applicant.name} screened — Score: ${result.score}/100`, 'success');
-  viewJobApplicants(jobId); // refresh the view
-}
-
-
-/* ── AI SCREEN ALL APPLICANTS FOR A JOB ── */
-async function screenAllApplicants(jobId) {
-  const job = getJobPostings().find(j => j.id === jobId);
-  if (!job) return;
-
-  const unscreened = getApplicantsByJob(jobId).filter(a => a.aiScore === null);
-  if (unscreened.length === 0) {
-    showToast('All applicants for this job are already screened.', 'info');
-    return;
-  }
-
-  showToast(`Screening ${unscreened.length} applicant${unscreened.length > 1 ? 's' : ''}... This may take a moment.`, 'info');
-
-  // Screen one at a time to avoid rate limits
-  for (const applicant of unscreened) {
-    const result = await screenCandidate(job, applicant);
-    updateApplicant(applicant.id, {
-      aiScore: result.score,
-      aiAnalysis: result,
-      status: result.recommendation === 'Strong Yes' ? 'shortlisted' : applicant.status
-    });
-  }
-
-  showToast(`All ${unscreened.length} applicants screened successfully!`, 'success');
-  viewJobApplicants(jobId);
-}
-
-
-/* ── FILTER APPLICANTS BY STATUS ── */
-function filterApplicantsByStatus(status, jobId) {
-  const job = getJobPostings().find(j => j.id === jobId);
-  let applicants = getApplicantsByJob(jobId);
-  if (status) applicants = applicants.filter(a => a.status === status);
-
-  const list = document.getElementById(`applicants-list-${jobId}`);
-  if (!list) return;
-
-  list.innerHTML = applicants.length
-    ? applicants.map(a => buildApplicantCard(a, job)).join('')
-    : `<div class="empty-state"><i data-lucide="filter-x"></i><p>No applicants with this status</p></div>`;
-  lucide.createIcons();
-}
-
-
-/* ── VIEW COVER LETTER ── */
-function viewCoverLetter(applicantId) {
-  const applicant = getApplicants().find(a => a.id === applicantId);
-  if (!applicant) return;
-
+function viewFullCoverLetter(applicantId) {
+  const a = getApplicants().find(x => x.id === applicantId);
+  if (!a) return;
   openModal(`
     <div class="modal-header">
-      <h3>${applicant.name} — Cover Letter</h3>
+      <h3>${a.name} &mdash; Cover Letter</h3>
       <button class="modal-close" onclick="closeModal()"><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
-      <div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:1.25rem;line-height:1.8;color:var(--text)">
-        ${applicant.coverLetter || 'No cover letter provided.'}
+      <div class="profile-grid" style="margin-bottom:1rem">
+        <div class="profile-field"><span class="profile-field-label"><i data-lucide="mail"></i> Email</span><span>${a.email}</span></div>
+        <div class="profile-field"><span class="profile-field-label"><i data-lucide="phone"></i> Phone</span><span>${a.phone || '&mdash;'}</span></div>
+        <div class="profile-field"><span class="profile-field-label"><i data-lucide="briefcase"></i> Experience</span><span>${a.experience}</span></div>
+        <div class="profile-field"><span class="profile-field-label"><i data-lucide="code"></i> Skills</span><span>${a.skills}</span></div>
       </div>
-      <div class="profile-grid" style="margin-top:1rem">
-        <div class="profile-field">
-          <span class="profile-field-label"><i data-lucide="mail"></i> Email</span>
-          <span>${applicant.email}</span>
-        </div>
-        <div class="profile-field">
-          <span class="profile-field-label"><i data-lucide="phone"></i> Phone</span>
-          <span>${applicant.phone}</span>
-        </div>
-        <div class="profile-field">
-          <span class="profile-field-label"><i data-lucide="briefcase"></i> Experience</span>
-          <span>${applicant.experience}</span>
-        </div>
-        <div class="profile-field">
-          <span class="profile-field-label"><i data-lucide="code"></i> Skills</span>
-          <span>${applicant.skills}</span>
-        </div>
-      </div>
+      <div style="background:var(--surface-2);border-radius:var(--radius-sm);padding:1.25rem;line-height:1.8;color:var(--text);font-size:0.875rem;white-space:pre-wrap">${a.coverLetter || 'No cover letter provided.'}</div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Close</button>
@@ -423,75 +304,107 @@ function viewCoverLetter(applicantId) {
   `);
 }
 
+function downloadApplicantCV(applicantId) {
+  const a = getApplicants().find(x => x.id === applicantId);
+  if (!a?.cvFile) { showToast('CV file not available for download.', 'error'); return; }
+  const link = document.createElement('a');
+  link.href = a.cvFile;
+  link.download = a.cvFileName || 'cv.pdf';
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast(`Downloaded: ${a.cvFileName}`, 'success');
+  auditLog(`CV downloaded: ${a.name}`, 'recruitment');
+}
 
-/* ── UPDATE APPLICANT STATUS ── */
-function updateApplicantStatus(applicantId, newStatus, jobId) {
-  updateApplicant(applicantId, { status: newStatus });
-  const statusLabels = { shortlisted: 'Shortlisted', rejected: 'Rejected', hired: 'Hired ✓' };
-  showToast(`Applicant ${statusLabels[newStatus] || newStatus}`, newStatus === 'rejected' ? 'warning' : 'success');
+async function screenSingleApplicant(applicantId, jobId) {
+  const applicant = getApplicants().find(a => a.id === applicantId);
+  const job       = getJobPostings().find(j => j.id === jobId);
+  if (!applicant || !job) return;
+  const card = document.getElementById(`app-${applicantId}`);
+  if (card) {
+    const btn = card.querySelector(`button[onclick*="screenSingle"]`);
+    if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner" style="width:14px;height:14px"></div> Screening...'; }
+  }
+  const result = await screenCandidate(job, applicant);
+  updateApplicant(applicantId, { aiScore: result.score, aiAnalysis: result, status: result.recommendation === 'Strong Yes' ? 'shortlisted' : applicant.status });
+  showToast(`${applicant.name} screened &mdash; Score: ${result.score}/100`, 'success');
+  auditLog(`AI screened: ${applicant.name}`, 'recruitment', `Score: ${result.score}`);
   viewJobApplicants(jobId);
 }
 
+async function screenAllApplicants(jobId) {
+  const job        = getJobPostings().find(j => j.id === jobId);
+  if (!job) return;
+  const unscreened = getApplicantsByJob(jobId).filter(a => a.aiScore === null);
+  if (!unscreened.length) { showToast('All applicants already screened.', 'info'); return; }
+  showToast(`Screening ${unscreened.length} applicant${unscreened.length > 1 ? 's' : ''}... please wait.`, 'info');
+  for (const applicant of unscreened) {
+    const result = await screenCandidate(job, applicant);
+    updateApplicant(applicant.id, { aiScore: result.score, aiAnalysis: result, status: result.recommendation === 'Strong Yes' ? 'shortlisted' : applicant.status });
+  }
+  showToast(`All ${unscreened.length} applicants screened!`, 'success');
+  auditLog(`Bulk AI screening: ${job.title}`, 'recruitment', `${unscreened.length} screened`);
+  viewJobApplicants(jobId);
+}
 
-/* ── ALL APPLICANTS VIEW ── */
-function showApplicantsView() {
-  const jobs = getJobPostings();
+function filterApplicantsByStatus(status, jobId) {
+  const job        = getJobPostings().find(j => j.id === jobId);
+  let   applicants = getApplicantsByJob(jobId);
+  if (status) applicants = applicants.filter(a => a.status === status);
+  const list = document.getElementById(`applicants-list-${jobId}`);
+  if (!list) return;
+  list.innerHTML = applicants.length
+    ? applicants.map(a => buildApplicantCard(a, job)).join('')
+    : `<div class="empty-state"><i data-lucide="filter-x"></i><p>No applicants with this status</p></div>`;
+  lucide.createIcons();
+}
+
+function updateApplicantStatus(applicantId, newStatus, jobId) {
+  updateApplicant(applicantId, { status: newStatus });
+  const labels = { shortlisted:'Shortlisted', rejected:'Rejected', hired:'Hired' };
+  showToast(`Applicant ${labels[newStatus] || newStatus}`, newStatus === 'rejected' ? 'warning' : 'success');
+  viewJobApplicants(jobId);
+}
+
+function showAllApplicantsView() {
+  const jobs       = getJobPostings();
   const applicants = getApplicants();
-  const content = document.getElementById('recruitment-main');
-  if (!content) return;
-
-  content.innerHTML = `
+  const main       = document.getElementById('recruitment-main');
+  if (!main) return;
+  main.innerHTML = `
     <div style="margin-bottom:1rem">
-      <button class="btn btn-secondary" onclick="renderRecruitment()">
-        <i data-lucide="arrow-left"></i> Back to Jobs
-      </button>
+      <button class="btn btn-secondary" onclick="renderRecruitment()"><i data-lucide="arrow-left"></i> Back to Jobs</button>
     </div>
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">All Applicants (${applicants.length})</div>
-      </div>
+      <div class="card-header"><div class="card-title">All Applicants (${applicants.length})</div></div>
       <div class="table-wrapper">
         <table>
-          <thead>
-            <tr>
-              <th>Applicant</th>
-              <th>Applied For</th>
-              <th>Experience</th>
-              <th>AI Score</th>
-              <th>Status</th>
-              <th>Applied Date</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Applicant</th><th>Applied For</th><th>Experience</th><th>CV</th><th>AI Score</th><th>Status</th><th>Date</th></tr></thead>
           <tbody>
             ${applicants.length === 0
-              ? `<tr><td colspan="6"><div class="empty-state"><i data-lucide="users"></i><p>No applicants yet</p></div></td></tr>`
+              ? `<tr><td colspan="7"><div class="empty-state"><i data-lucide="users"></i><p>No applicants yet</p></div></td></tr>`
               : applicants.map(a => {
-                  const job = jobs.find(j => j.id === a.jobId);
+                  const job        = jobs.find(j => j.id === a.jobId);
                   const scoreColor = a.aiScore >= 80 ? 'var(--success)' : a.aiScore >= 60 ? 'var(--warning)' : a.aiScore !== null ? 'var(--danger)' : 'var(--text-muted)';
-                  return `
-                    <tr>
-                      <td>
-                        <div class="emp-cell">
-                          <div class="emp-avatar">${getInitials(a.name)}</div>
-                          <div>
-                            <div class="emp-name">${a.name}</div>
-                            <div class="emp-email">${a.email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>${job ? job.title : '—'}</td>
-                      <td>${a.experience}</td>
-                      <td>
-                        ${a.aiScore !== null
-                          ? `<span style="font-weight:700;color:${scoreColor}">${a.aiScore}/100</span>`
-                          : `<span class="text-muted text-sm">—</span>`}
-                      </td>
-                      <td><span class="badge ${getApplicantStatusBadge(a.status)}">${capitalize(a.status)}</span></td>
-                      <td>${formatDate(a.appliedDate)}</td>
-                    </tr>
-                  `;
-                }).join('')
-            }
+                  return `<tr>
+                    <td>
+                      <div class="emp-cell">
+                        <div class="emp-avatar">${getInitials(a.name)}</div>
+                        <div><div class="emp-name">${a.name}</div><div class="emp-email">${a.email}</div></div>
+                      </div>
+                    </td>
+                    <td>${job ? job.title : '&mdash;'}</td>
+                    <td>${a.experience}</td>
+                    <td>${a.cvFileName
+                      ? `<button onclick="downloadApplicantCV('${a.id}')" class="btn btn-ghost" style="font-size:0.72rem;color:var(--success)"><i data-lucide="download"></i> CV</button>`
+                      : '<span class="text-muted text-xs">None</span>'}</td>
+                    <td>${a.aiScore !== null ? `<span style="font-weight:700;color:${scoreColor}">${a.aiScore}/100</span>` : '<span class="text-muted">—</span>'}</td>
+                    <td><span class="badge ${getApplicantStatusBadge(a.status)}">${capitalize(a.status)}</span></td>
+                    <td>${formatDate(a.appliedDate)}</td>
+                  </tr>`;
+                }).join('')}
           </tbody>
         </table>
       </div>
@@ -500,63 +413,29 @@ function showApplicantsView() {
   lucide.createIcons();
 }
 
-
-/* ── ADD JOB POSTING MODAL ── */
 function openAddJobModal() {
-  const departments = getDepartments();
-
+  const departments = typeof getDepartments === 'function' ? getDepartments() : [];
   openModal(`
     <div class="modal-header">
       <h3>Post a New Job</h3>
       <button class="modal-close" onclick="closeModal()"><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label>Job Title *</label>
-        <input type="text" id="job-title" placeholder="e.g. Senior Backend Developer" />
+      <div class="form-group"><label>Job Title *</label><input type="text" id="job-title" placeholder="e.g. Senior Backend Developer" /></div>
+      <div class="form-row">
+        <div class="form-group"><label>Department *</label><select id="job-dept"><option value="">Select department</option>${departments.map(d => `<option value="${d}">${d}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Type</label><select id="job-type"><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option></select></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Department *</label>
-          <select id="job-dept">
-            <option value="">Select department</option>
-            ${departments.map(d => `<option value="${d}">${d}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Employment Type</label>
-          <select id="job-type">
-            <option>Full-time</option>
-            <option>Part-time</option>
-            <option>Contract</option>
-            <option>Internship</option>
-          </select>
-        </div>
+        <div class="form-group"><label>Location</label><input type="text" id="job-location" value="Lagos, Nigeria" /></div>
+        <div class="form-group"><label>Salary Range</label><input type="text" id="job-salary" placeholder="e.g. &#8358;500,000 - &#8358;800,000/month" /></div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Location</label>
-          <input type="text" id="job-location" placeholder="e.g. Lagos, Nigeria" value="Lagos, Nigeria" />
-        </div>
-        <div class="form-group">
-          <label>Salary Range</label>
-          <input type="text" id="job-salary" placeholder="e.g. ₦500,000 - ₦800,000/month" />
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Job Description *</label>
-        <textarea id="job-desc" rows="3" placeholder="Describe the role and responsibilities..."></textarea>
-      </div>
-      <div class="form-group">
-        <label>Requirements *</label>
-        <textarea id="job-req" rows="2" placeholder="e.g. 3+ years experience, React, Node.js..."></textarea>
-      </div>
+      <div class="form-group"><label>Job Description *</label><textarea id="job-desc" rows="3" placeholder="Describe the role..."></textarea></div>
+      <div class="form-group"><label>Requirements *</label><textarea id="job-req" rows="2" placeholder="e.g. 3+ years, React, Node.js..."></textarea></div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveNewJob()">
-        <i data-lucide="send"></i> Publish Job
-      </button>
+      <button class="btn btn-primary" onclick="saveNewJob()"><i data-lucide="send"></i> Publish Job</button>
     </div>
   `, 'modal-lg');
 }
@@ -569,84 +448,44 @@ function saveNewJob() {
   const salary   = document.getElementById('job-salary').value.trim();
   const desc     = document.getElementById('job-desc').value.trim();
   const req      = document.getElementById('job-req').value.trim();
-
-  if (!title || !dept || !desc || !req) {
-    showToast('Please fill in all required fields.', 'error');
-    return;
-  }
-
-  addJobPosting({
-    title, department: dept, type, location, salary,
-    description: desc, requirements: req,
-    postedDate: new Date().toISOString().split('T')[0],
-    status: 'open'
-  });
-
+  if (!title || !dept || !desc || !req) { showToast('Please fill in all required fields.', 'error'); return; }
+  addJobPosting({ title, department: dept, type, location, salary, description: desc, requirements: req, postedDate: new Date().toISOString().split('T')[0], status: 'open' });
   addNotification(`New job posted: ${title}`, 'recruitment');
+  auditLog(`Job posted: ${title}`, 'recruitment');
   closeModal();
-  auditLog(`Job posted: ${title}`, 'recruitment', `Dept: ${dept}`);
-  showToast(`"${title}" posted successfully!`, 'success');
+  showToast(`"${title}" posted!`, 'success');
   refreshPage();
 }
 
-
-/* ── TOGGLE JOB STATUS ── */
 async function toggleJobStatus(jobId) {
-  const jobs = getJobPostings();
-  const idx = jobs.findIndex(j => j.id === jobId);
+  const jobs  = getJobPostings();
+  const idx   = jobs.findIndex(j => j.id === jobId);
   if (idx === -1) return;
-
   const newStatus = jobs[idx].status === 'open' ? 'closed' : 'open';
-  const confirmed = await confirmDialog(
-    `${newStatus === 'closed' ? 'Close' : 'Reopen'} the position "${jobs[idx].title}"?`,
-    newStatus === 'closed' ? 'Close Position' : 'Reopen',
-    newStatus === 'closed'
-  );
+  const confirmed = await confirmDialog(`${newStatus === 'closed' ? 'Close' : 'Reopen'} "${jobs[idx].title}"?`, newStatus === 'closed' ? 'Close' : 'Reopen', newStatus === 'closed');
   if (!confirmed) return;
-
   jobs[idx].status = newStatus;
   saveJobPostings(jobs);
-  showToast(`Position ${newStatus === 'closed' ? 'closed' : 'reopened'}.`, 'success');
+  showToast(`Position ${newStatus}.`, 'success');
   renderRecruitment();
 }
 
-
-/* ── HELPERS ── */
-function getApplicantStatusBadge(status) {
-  const map = {
-    pending: 'badge-yellow',
-    shortlisted: 'badge-blue',
-    rejected: 'badge-red',
-    hired: 'badge-green'
-  };
-  return map[status] || 'badge-gray';
-}
-
-
-/* ── APPLY PORTAL LINK ── */
 function showApplyPortalModal() {
-  const applyUrl = window.location.href.replace('index.html', 'apply.html').replace(/\/[^/]*$/, '/apply.html');
+  const applyUrl = window.location.href.replace(/\/[^/]*$/, '/apply.html');
   openModal(`
     <div class="modal-header">
       <h3>Applicant Portal Link</h3>
       <button class="modal-close" onclick="closeModal()"><i data-lucide="x"></i></button>
     </div>
     <div class="modal-body">
-      <p class="text-secondary text-sm" style="margin-bottom:1rem">
-        Share this link with candidates. They can view all open positions and submit their applications directly. Applications appear instantly in your recruitment module.
-      </p>
+      <p class="text-secondary text-sm" style="margin-bottom:1rem">Share this link with candidates. They can browse open positions, upload their CV and apply. Applications appear here instantly.</p>
       <div style="display:flex;gap:0.5rem;align-items:center">
-        <input type="text" id="portal-url" value="${applyUrl}" readonly
-          style="flex:1;padding:0.65rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:0.82rem;font-family:monospace" />
-        <button class="btn btn-primary" onclick="copyPortalLink()">
-          <i data-lucide="copy"></i> Copy
-        </button>
+        <input type="text" id="portal-url" value="${applyUrl}" readonly style="flex:1;padding:0.65rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:0.8rem;font-family:monospace" />
+        <button class="btn btn-primary" onclick="copyPortalLink()"><i data-lucide="copy"></i> Copy</button>
       </div>
-      <div style="margin-top:1rem;display:flex;gap:0.75rem">
-        <button class="btn btn-secondary w-full" onclick="window.open('apply.html', '_blank')">
-          <i data-lucide="external-link"></i> Open Portal
-        </button>
-      </div>
+      <button class="btn btn-secondary w-full" style="margin-top:0.75rem" onclick="window.open('apply.html','_blank')">
+        <i data-lucide="external-link"></i> Preview Portal
+      </button>
     </div>
   `);
 }
@@ -654,8 +493,12 @@ function showApplyPortalModal() {
 function copyPortalLink() {
   const input = document.getElementById('portal-url');
   if (input) {
-    navigator.clipboard.writeText(input.value).then(() => {
-      showToast('Portal link copied to clipboard!', 'success');
-    });
+    navigator.clipboard.writeText(input.value)
+      .then(() => showToast('Portal link copied!', 'success'))
+      .catch(() => { input.select(); document.execCommand('copy'); showToast('Copied!', 'success'); });
   }
+}
+
+function getApplicantStatusBadge(status) {
+  return { pending:'badge-yellow', shortlisted:'badge-blue', rejected:'badge-red', hired:'badge-green' }[status] || 'badge-gray';
 }

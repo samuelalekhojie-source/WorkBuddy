@@ -12,7 +12,7 @@ function renderPayslips() {
         ? `<div class="empty-state"><i data-lucide="receipt"></i><h3>No payslips yet</h3><p>Your payslips will appear here once processed</p></div>`
         : `<div class="table-wrapper">
             <table>
-              <thead><tr><th>Month</th><th>Basic</th><th>Allowances</th><th>Deductions</th><th>Net Pay</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Month</th><th>Basic</th><th>Allowances</th><th>Deductions</th><th>Net Pay</th><th>Status</th><th>Reference</th><th>Actions</th></tr></thead>
               <tbody>
                 ${payroll.slice().reverse().map(p => `
                   <tr>
@@ -22,6 +22,11 @@ function renderPayslips() {
                     <td class="text-danger">-${formatCurrency(p.deductions)}</td>
                     <td><strong>${formatCurrency(p.netSalary)}</strong></td>
                     <td><span class="badge ${p.status==='paid'?'badge-green':'badge-yellow'}">${capitalize(p.status)}</span></td>
+                    <td>
+                      ${p.paystackRef
+                        ? `<span style="font-size:0.72rem;font-family:monospace;color:var(--success)">${p.paystackRef}</span>`
+                        : `<span class="text-muted text-xs">—</span>`}
+                    </td>
                     <td>
                       <button class="btn btn-ghost" onclick="viewPayslipModal('${user.id}', '${p.id}')">
                         <i data-lucide="eye"></i>
