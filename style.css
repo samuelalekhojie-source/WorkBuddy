@@ -4353,6 +4353,7 @@ tbody tr:hover {
   width: 240px;
 }
 
+
 @media (max-width: 768px) {
   .search-dropdown {
     width: calc(100vw - 2rem);
